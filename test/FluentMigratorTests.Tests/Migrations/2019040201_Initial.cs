@@ -7,7 +7,14 @@ namespace FluentMigratorTests.Tests.Migrations
     {
         public override void Up()
         {
-            throw new System.NotImplementedException();
+            Create.Schema(Constants.Schema);
+
+            Create.Table("Orchards")
+                .InSchema(Constants.Schema)
+                .WithColumn("OrchardId").AsInt32().NotNullable().Identity()
+                .WithColumn("Name").AsString().NotNullable()
+                .WithColumn("Description").AsString().NotNullable()
+                ;
         }
     }
 }
