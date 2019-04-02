@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using FluentMigrator.Runner;
 using FluentMigratorTestsApp.Migrations;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,11 +30,8 @@ namespace FluentMigratorTestsApp
                 // Add common FluentMigrator services
                 .AddFluentMigratorCore()
                 .ConfigureRunner(rb => rb
-                    // Add SQLite support to FluentMigrator
-                    .AddSQLite()
-                    // Set the connection string
+                    .AddSQLite() // pick which database type to use for the runner
                     .WithGlobalConnectionString("Data Source=test.db")
-                    // Define the assembly containing the migrations
                     .ScanIn(typeof(InitialMigration).Assembly).For.Migrations())
                 // Enable logging to console in the FluentMigrator way
                 .AddLogging(lb => lb.AddFluentMigratorConsole())
@@ -42,15 +39,9 @@ namespace FluentMigratorTestsApp
                 .BuildServiceProvider(false);
         }
         
-        /// <summary>
-        /// Update the database
-        /// </summary>
         private static void UpdateDatabase(IServiceProvider serviceProvider)
         {
-            // Instantiate the runner
             var runner = serviceProvider.GetRequiredService<IMigrationRunner>();
-
-            // Execute the migrations
             runner.MigrateUp();
         }        
     }
