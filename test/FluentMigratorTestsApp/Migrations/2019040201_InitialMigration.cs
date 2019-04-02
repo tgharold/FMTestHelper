@@ -1,9 +1,9 @@
 using FluentMigrator;
 
-namespace FluentMigratorTests.Tests.Migrations
+namespace FluentMigratorTestsApp.Migrations
 {
     [Migration(2019040201)]
-    public class Initial : ForwardOnlyMigration
+    public class InitialMigration : ForwardOnlyMigration
     {
         public override void Up()
         {

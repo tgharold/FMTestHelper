@@ -1,4 +1,4 @@
-namespace FluentMigratorTests.Tests
+namespace FluentMigratorTestsApp
 {
     public static class Constants
     {
