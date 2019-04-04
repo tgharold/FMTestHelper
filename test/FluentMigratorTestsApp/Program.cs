@@ -110,12 +110,16 @@ namespace FluentMigratorTestsApp
 
             services
                 // Add common FluentMigrator services
-                .AddFluentMigratorCore()
+                .AddFluentMigratorCore();
+                
+            services
                 .ConfigureRunner(rb => rb
                     .AddSqlServer() // pick which database type to use for the runner
                     .WithGlobalConnectionString(connectionString)
                     .ScanIn(typeof(InitialMigration).Assembly).For.Migrations()
-                )
+                );
+                
+            services
                 // Enable logging to console in the FluentMigrator way
                 .AddLogging(lb => lb.AddFluentMigratorConsole())
                 ;
