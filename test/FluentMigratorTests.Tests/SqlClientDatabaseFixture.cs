@@ -7,6 +7,7 @@ namespace FluentMigratorTests.Tests
     {
         private readonly string _databaseName;
         private readonly SqlConnectionStringBuilder _adminBuilder;
+        private SqlConnectionStringBuilder _testDatabaseBuilder;
 
         public SqlClientDatabaseFixture(
             string adminConnectionString,
@@ -17,7 +18,7 @@ namespace FluentMigratorTests.Tests
             _databaseName = databaseName;
             CreateDatabase();
         }
-        
+
         public SqlClientDatabaseFixture(
             SqlConnectionStringBuilder adminBuilder,
             string databaseName
@@ -36,14 +37,19 @@ namespace FluentMigratorTests.Tests
                 using (var command = new SqlCommand(
                     $"DROP DATABASE IF EXISTS [{_databaseName}]; CREATE DATABASE [{_databaseName}]",
                     connection
-                ))
+                    ))
                 {
                     command.Connection.Open();
                     command.ExecuteNonQuery();
                     command.Connection.Close();
                 }
             }
+            
+            _testDatabaseBuilder = new SqlConnectionStringBuilder(_adminBuilder.ConnectionString);
+            _testDatabaseBuilder.InitialCatalog = _databaseName;
         }
+
+        public string ConnectionString() => _testDatabaseBuilder.ConnectionString;
 
         public void Dispose()
         {
