@@ -15,6 +15,15 @@ namespace FluentMigratorTestsApp.Migrations
                 .WithColumn("Name").AsString().NotNullable()
                 .WithColumn("Description").AsString().NotNullable()
                 ;
+            
+            Create.Schema(Constants.SecondarySchema);
+            
+            Create.Table("Orchards")
+                .InSchema(Constants.SecondarySchema)
+                .WithColumn("OrchardId").AsInt32().NotNullable().Identity()
+                .WithColumn("Name").AsString().NotNullable()
+                .WithColumn("Description").AsString().NotNullable()
+                ;
         }
     }
 }
