@@ -34,6 +34,7 @@ namespace FluentMigratorTestsApp
             using (var scope = serviceProvider.CreateScope())
             {
                 UpdateDatabase(scope.ServiceProvider);
+                //TODO: Need to destroy the MigrationRunner Processor
             }
             
             Console.WriteLine("Goodbye, World!");
@@ -55,6 +56,7 @@ namespace FluentMigratorTestsApp
 
             using (var connection = new SqlConnection(createBuilder.ConnectionString))
             {
+                connection.Open();
                 // It's not possible to parameterize the database names
                 using (var command = new SqlCommand(
                     $"DROP DATABASE IF EXISTS [{databaseName}]; CREATE DATABASE [{databaseName}]", 
@@ -62,9 +64,7 @@ namespace FluentMigratorTestsApp
                 ))
                 {
                     Console.WriteLine($"Opening connection to {createBuilder.DataSource}...");
-                    command.Connection.Open();
                     command.ExecuteNonQuery();
-                    command.Connection.Close();
                     Console.WriteLine("Done.");
                 }
             }
@@ -84,16 +84,15 @@ namespace FluentMigratorTestsApp
             
             using (var connection = new SqlConnection(destroyBuilder.ConnectionString))
             {
+                connection.Open();
                 // It's not possible to parameterize the database names
                 using (var command = new SqlCommand(
                     $"DROP DATABASE IF EXISTS [{databaseName}];", 
                     connection
-                ))
+                    ))
                 {
                     Console.WriteLine($"Opening connection to {destroyBuilder.DataSource}...");
-                    command.Connection.Open();
                     command.ExecuteNonQuery();
-                    command.Connection.Close();
                     Console.WriteLine("Done.");
                 }
             }

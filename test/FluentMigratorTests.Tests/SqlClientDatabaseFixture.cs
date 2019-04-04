@@ -33,15 +33,14 @@ namespace FluentMigratorTests.Tests
         {
             using (var connection = new SqlConnection(_adminBuilder.ConnectionString))
             {
+                connection.Open();
                 // It's not possible to parameterize the database names for DROP/CREATE
                 using (var command = new SqlCommand(
                     $"DROP DATABASE IF EXISTS [{_databaseName}]; CREATE DATABASE [{_databaseName}]",
                     connection
                     ))
                 {
-                    command.Connection.Open();
                     command.ExecuteNonQuery();
-                    command.Connection.Close();
                 }
             }
             
@@ -55,15 +54,14 @@ namespace FluentMigratorTests.Tests
         {
             using (var connection = new SqlConnection(_adminBuilder.ConnectionString))
             {
+                connection.Open();
                 // It's not possible to parameterize the database names for DROP/CREATE
                 using (var command = new SqlCommand(
                     $"DROP DATABASE IF EXISTS [{_databaseName}];", 
                     connection
                     ))
                 {
-                    command.Connection.Open();
                     command.ExecuteNonQuery();
-                    command.Connection.Close();
                 }
             }
         }
