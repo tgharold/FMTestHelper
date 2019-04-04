@@ -16,6 +16,7 @@ namespace FluentMigratorTestsApp
             Console.WriteLine("Create database.");
             var databaseName = CreateDatabase();
             
+            
             var migrationBuilder = new SqlConnectionStringBuilder
             {
                 DataSource = "localhost,11433",
