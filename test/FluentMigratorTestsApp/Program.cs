@@ -3,7 +3,6 @@ using System.Data.SqlClient;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.VersionTableInfo;
 using FluentMigratorTestsApp.Migrations;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FluentMigratorTestsApp
@@ -13,9 +12,20 @@ namespace FluentMigratorTestsApp
         static void Main(string[] args)
         {
             Console.WriteLine("Starting");
+
+            Console.WriteLine("Create database.");
+            var databaseName = CreateDatabase();
+            
+            var migrationBuilder = new SqlConnectionStringBuilder
+            {
+                DataSource = "localhost,11433",
+                UserID = "sa", 
+                Password = "Pass123!", 
+                InitialCatalog = databaseName
+            };
             
             Console.WriteLine("Creating the service provider (DI).");
-            var serviceProvider = CreateServices();
+            var serviceProvider = CreateServices(migrationBuilder.ConnectionString);
             
             Console.WriteLine("Running the migration...");
             // Put the database update into a scope to ensure
@@ -26,12 +36,10 @@ namespace FluentMigratorTestsApp
             }
             
             Console.WriteLine("Goodbye, World!");
+            DestroyDatabase(databaseName);
         }
-        
-        /// <summary>
-        /// Configure the dependency injection services
-        /// </summary>
-        private static IServiceProvider CreateServices()
+
+        private static string CreateDatabase()
         {
             var createBuilder = new SqlConnectionStringBuilder
             {
@@ -50,7 +58,7 @@ namespace FluentMigratorTestsApp
                 using (var command = new SqlCommand(
                     $"DROP DATABASE IF EXISTS [{databaseName}]; CREATE DATABASE [{databaseName}]", 
                     connection
-                    ))
+                ))
                 {
                     Console.WriteLine($"Opening connection to {createBuilder.DataSource}...");
                     command.Connection.Open();
@@ -60,14 +68,41 @@ namespace FluentMigratorTestsApp
                 }
             }
 
-            var migrationBuilder = new SqlConnectionStringBuilder
+            return databaseName;
+        }
+        
+        private static void DestroyDatabase(string databaseName)
+        {
+            var destroyBuilder = new SqlConnectionStringBuilder
             {
-                DataSource = "localhost,11433",
+                DataSource = "localhost,11433", 
                 UserID = "sa", 
                 Password = "Pass123!", 
-                InitialCatalog = databaseName
+                InitialCatalog = "master"
             };
-
+            
+            using (var connection = new SqlConnection(destroyBuilder.ConnectionString))
+            {
+                // It's not possible to parameterize the database names
+                using (var command = new SqlCommand(
+                    $"DROP DATABASE IF EXISTS [{databaseName}];", 
+                    connection
+                ))
+                {
+                    Console.WriteLine($"Opening connection to {destroyBuilder.DataSource}...");
+                    command.Connection.Open();
+                    command.ExecuteNonQuery();
+                    command.Connection.Close();
+                    Console.WriteLine("Done.");
+                }
+            }
+        }        
+        
+        /// <summary>
+        /// Configure the dependency injection services
+        /// </summary>
+        private static IServiceProvider CreateServices(string connectionString)
+        {
             var services = new ServiceCollection();
 
             services.AddScoped<IVersionTableMetaData, VersionTableMetaData>();
@@ -77,7 +112,7 @@ namespace FluentMigratorTestsApp
                 .AddFluentMigratorCore()
                 .ConfigureRunner(rb => rb
                     .AddSqlServer() // pick which database type to use for the runner
-                    .WithGlobalConnectionString(migrationBuilder.ConnectionString)
+                    .WithGlobalConnectionString(connectionString)
                     .ScanIn(typeof(InitialMigration).Assembly).For.Migrations()
                 )
                 // Enable logging to console in the FluentMigrator way
