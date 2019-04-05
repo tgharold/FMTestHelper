@@ -2,10 +2,10 @@ using System;
 using System.Data.SqlClient;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.VersionTableInfo;
-using FluentMigratorTestsApp.Migrations;
 using Microsoft.Extensions.DependencyInjection;
+using TestApp.SqlServer.Migrations;
 
-namespace FluentMigratorTestsApp
+namespace TestApp.SqlServer
 {
     class Program
     {
@@ -13,20 +13,23 @@ namespace FluentMigratorTestsApp
         {
             Console.WriteLine("Starting");
 
+            var databaseName = $"{Guid.NewGuid():N}";
+            Console.WriteLine($"databaseName [{databaseName}].");
+
             Console.WriteLine("Create database.");
-            var databaseName = CreateDatabase();
-            
-            
-            var migrationBuilder = new SqlConnectionStringBuilder
+
+            var adminConnectionStringBuilder = new SqlConnectionStringBuilder
             {
-                DataSource = "localhost,11433",
+                DataSource = "localhost,11433", 
                 UserID = "sa", 
                 Password = "Pass123!", 
-                InitialCatalog = databaseName
+                InitialCatalog = "master"
             };
             
+            var testDatabaseConnectionString = CreateDatabase(adminConnectionStringBuilder, databaseName);
+            
             Console.WriteLine("Creating the service provider (DI).");
-            var serviceProvider = CreateServices(migrationBuilder.ConnectionString);
+            var serviceProvider = CreateServices(testDatabaseConnectionString);
             
             Console.WriteLine("Running the migration...");
             // Put the database update into a scope to ensure
@@ -38,23 +41,15 @@ namespace FluentMigratorTestsApp
             }
             
             Console.WriteLine("Goodbye, World!");
-            DestroyDatabase(databaseName);
+            DestroyDatabase(adminConnectionStringBuilder, databaseName);
         }
 
-        private static string CreateDatabase()
+        private static string CreateDatabase(
+            SqlConnectionStringBuilder csb, 
+            string databaseName
+            )
         {
-            var createBuilder = new SqlConnectionStringBuilder
-            {
-                DataSource = "localhost,11433", 
-                UserID = "sa", 
-                Password = "Pass123!", 
-                InitialCatalog = "master"
-            };
-            
-            var databaseName = $"{Guid.NewGuid():N}";
-            Console.WriteLine($"databaseName [{databaseName}].");
-
-            using (var connection = new SqlConnection(createBuilder.ConnectionString))
+            using (var connection = new SqlConnection(csb.ConnectionString))
             {
                 connection.Open();
                 // It's not possible to parameterize the database names
@@ -63,26 +58,23 @@ namespace FluentMigratorTestsApp
                     connection
                 ))
                 {
-                    Console.WriteLine($"Opening connection to {createBuilder.DataSource}...");
+                    Console.WriteLine($"Opening connection to {csb.DataSource}...");
                     command.ExecuteNonQuery();
                     Console.WriteLine("Done.");
                 }
             }
 
-            return databaseName;
+            var testBuilder = new SqlConnectionStringBuilder(csb.ConnectionString);
+            testBuilder.InitialCatalog = databaseName;
+            return testBuilder.ConnectionString;
         }
         
-        private static void DestroyDatabase(string databaseName)
+        private static void DestroyDatabase(
+            SqlConnectionStringBuilder csb, 
+            string databaseName
+            )
         {
-            var destroyBuilder = new SqlConnectionStringBuilder
-            {
-                DataSource = "localhost,11433", 
-                UserID = "sa", 
-                Password = "Pass123!", 
-                InitialCatalog = "master"
-            };
-            
-            using (var connection = new SqlConnection(destroyBuilder.ConnectionString))
+            using (var connection = new SqlConnection(csb.ConnectionString))
             {
                 connection.Open();
                 // It's not possible to parameterize the database names
@@ -91,7 +83,7 @@ namespace FluentMigratorTestsApp
                     connection
                     ))
                 {
-                    Console.WriteLine($"Opening connection to {destroyBuilder.DataSource}...");
+                    Console.WriteLine($"Opening connection to {csb.DataSource}...");
                     command.ExecuteNonQuery();
                     Console.WriteLine("Done.");
                 }

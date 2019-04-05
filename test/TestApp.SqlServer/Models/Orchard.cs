@@ -1,4 +1,4 @@
-namespace FluentMigratorTestsApp.Models
+namespace TestApp.SqlServer.Models
 {
     public class Orchard
     {

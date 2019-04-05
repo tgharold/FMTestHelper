@@ -1,4 +1,4 @@
-namespace FluentMigratorTestsApp
+namespace TestApp.SqlServer
 {
     public static class Constants
     {

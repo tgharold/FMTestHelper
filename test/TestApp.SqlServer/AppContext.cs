@@ -1,7 +1,7 @@
-using FluentMigratorTestsApp.Models;
 using Microsoft.EntityFrameworkCore;
+using TestApp.SqlServer.Models;
 
-namespace FluentMigratorTestsApp
+namespace TestApp.SqlServer
 {
     public class AppContext : DbContext
     {

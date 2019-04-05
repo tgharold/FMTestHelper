@@ -3,7 +3,7 @@ using FluentMigrator.Runner.Initialization;
 using FluentMigrator.Runner.VersionTableInfo;
 using Microsoft.Extensions.Options;
 
-namespace FluentMigratorTestsApp
+namespace TestApp.SqlServer
 {
     [VersionTableMetaData]
     public class VersionTableMetaData : DefaultVersionTableMetaData

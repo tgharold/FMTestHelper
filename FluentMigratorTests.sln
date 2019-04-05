@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F2762EE6-D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentMigratorTests.Tests", "test\FluentMigratorTests.Tests\FluentMigratorTests.Tests.csproj", "{9FB158DA-58FF-43D2-91D4-079AFFE38AF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentMigratorTestsApp", "test\FluentMigratorTestsApp\FluentMigratorTestsApp.csproj", "{CFD60230-3E07-4CD1-B87E-9DFC31F5E155}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp.SqlServer", "test\TestApp.SqlServer\TestApp.SqlServer.csproj", "{CFD60230-3E07-4CD1-B87E-9DFC31F5E155}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

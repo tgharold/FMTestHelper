@@ -1,6 +1,6 @@
 using FluentMigrator;
 
-namespace FluentMigratorTestsApp.Migrations
+namespace TestApp.SqlServer.Migrations
 {
     [Migration(2019040201)]
     public class InitialMigration : ForwardOnlyMigration
