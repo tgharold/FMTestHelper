@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace TestApp.SqlServer
 {
+    /// <summary>Defines where the VersionInfo table for FluentMigrator lives</summary>
     [VersionTableMetaData]
     public class VersionTableMetaData : DefaultVersionTableMetaData
     {
