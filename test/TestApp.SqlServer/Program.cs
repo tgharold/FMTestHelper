@@ -1,4 +1,5 @@
 using System;
+using System.Data.Common;
 using System.Data.SqlClient;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.VersionTableInfo;
@@ -12,42 +13,54 @@ namespace TestApp.SqlServer
         static void Main(string[] args)
         {
             Console.WriteLine("Starting");
+            
+            // The assumption is that all we have is a connection string
+            // And that connection string must have CREATE DATABASE, etc. permissions
+            const string adminConnectionString = "server=localhost,11433;database=master;user=sa;password=Pass123!;";
+            
+            // Use DbProviderFactory to keep things implementation-agnostic
+            DbProviderFactories.RegisterFactory(nameof(SqlClientFactory), SqlClientFactory.Instance);
+            var dbFactory = DbProviderFactories.GetFactory(nameof(SqlClientFactory));
+            var adminCSB = dbFactory.CreateConnectionStringBuilder();
+            if (adminCSB is null) throw new Exception($"{nameof(adminCSB)} is null!");
+
+            // Parse the connection string by shoving it into the ConnectionStringBuilder
+            adminCSB.ConnectionString = adminConnectionString;
+            foreach(var k in adminCSB.Keys) Console.WriteLine($"{nameof(adminCSB)}[{k}]='{adminCSB[k.ToString()].ToString()}'");
+            Console.WriteLine();
+            
+            // Different databases do connection strings slightly different in terms of what the database/server name is
+            const string databaseNameKey = "Initial Catalog";
+            const string serverNameKey = "Data Source";
 
             var databaseName = $"{Guid.NewGuid():N}";
-            Console.WriteLine($"databaseName [{databaseName}].");
+            Console.WriteLine($"Test databaseName [{databaseName}].");
 
             // -------------------- CREATE DATABASE
 
-            Console.WriteLine("Create database.");
-
-            var adminConnectionStringBuilder = new SqlConnectionStringBuilder
+            Console.WriteLine("Create test database...");
+            using (var connection = dbFactory.CreateConnection())
             {
-                DataSource = "localhost,11433", 
-                UserID = "sa", 
-                Password = "Pass123!", 
-                InitialCatalog = "master"
-            };
-
-            using (var connection = new SqlConnection(adminConnectionStringBuilder.ConnectionString))
-            {
+                connection.ConnectionString = adminCSB.ConnectionString;
                 connection.Open();
-                // It's not possible to parameterize the database names
-                using (var command = new SqlCommand(
-                    $"DROP DATABASE IF EXISTS [{databaseName}]; CREATE DATABASE [{databaseName}]", 
-                    connection
-                ))
+                
+                using (var command = dbFactory.CreateCommand())
                 {
-                    Console.WriteLine($"Opening connection to {adminConnectionStringBuilder.DataSource}...");
+                    // It's not possible to parameterize the database names in a DROP/CREATE
+                    command.CommandText = $"DROP DATABASE IF EXISTS [{databaseName}]; CREATE DATABASE [{databaseName}]";
+                    command.Connection = connection;
+                    Console.WriteLine($"Opening connection to {adminCSB[serverNameKey]}...");
                     command.ExecuteNonQuery();
-                    Console.WriteLine("Done.");
+                    Console.WriteLine("Done creating test database.");
                 }
             }
 
             // -------------------- RUN MIGRATIONS
-
-            var testBuilder = new SqlConnectionStringBuilder(adminConnectionStringBuilder.ConnectionString);
-            testBuilder.InitialCatalog = databaseName;
-            var testDatabaseConnectionString = testBuilder.ConnectionString;
+            
+            var testCSB = dbFactory.CreateConnectionStringBuilder();
+            testCSB.ConnectionString = adminConnectionString;
+            testCSB[databaseNameKey] = databaseName;
+            var testDatabaseConnectionString = testCSB.ConnectionString;
             
             Console.WriteLine("Creating the service provider (DI).");
             var services = new ServiceCollection();
@@ -87,17 +100,19 @@ namespace TestApp.SqlServer
             
             // -------------------- DESTROY DATABASE
 
-            using (var connection1 = new SqlConnection(adminConnectionStringBuilder.ConnectionString))
+            Console.WriteLine("Destroy test database...");
+            using (var connection = dbFactory.CreateConnection())
             {
-                connection1.Open();
-                // It's not possible to parameterize the database names
-                using (var command1 = new SqlCommand(
-                    $"DROP DATABASE IF EXISTS [{databaseName}];", 
-                    connection1
-                ))
+                connection.ConnectionString = adminCSB.ConnectionString;
+                connection.Open();
+                
+                using (var command = dbFactory.CreateCommand())
                 {
-                    Console.WriteLine($"Opening connection to {adminConnectionStringBuilder.DataSource}...");
-                    command1.ExecuteNonQuery();
+                    // It's not possible to parameterize the database names in a DROP
+                    command.CommandText = $"DROP DATABASE IF EXISTS [{databaseName}];";
+                    command.Connection = connection;
+                    Console.WriteLine($"Opening connection to {adminCSB[serverNameKey]}...");
+                    command.ExecuteNonQuery();
                     Console.WriteLine("Done.");
                 }
             }
