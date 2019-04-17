@@ -1,9 +1,11 @@
 using System;
+using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.VersionTableInfo;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using TestApp.SqlServer.Migrations;
 
@@ -43,6 +45,7 @@ namespace TestApp.SqlServer
             Console.WriteLine($"Test databaseName [{databaseName}].");
 
             // -------------------- CREATE DATABASE
+            // This bit is all done using the dbFactory object, no provider-specific code
 
             Console.WriteLine("Create test database...");
             using (var connection = dbFactory.CreateConnection())
@@ -64,6 +67,10 @@ namespace TestApp.SqlServer
             }
 
             // -------------------- RUN MIGRATIONS
+            
+            /* While FluentMigrator can be fed from the dbFactory object,
+             * there are bits that are provider-specific like ".AddSqlServer()".
+             */
             
             var testCSB = dbFactory.CreateConnectionStringBuilder();
             Debug.Assert(testCSB != null, nameof(testCSB) + " != null");
@@ -93,24 +100,70 @@ namespace TestApp.SqlServer
                 // Enable logging to console in the FluentMigrator way
                 .AddLogging(lb => lb.AddFluentMigratorConsole())
                 ;
-            var serviceProvider = (IServiceProvider) services.BuildServiceProvider(false);
-            
-            Console.WriteLine("Running the migration...");
-            // Put the database update into a scope to ensure
-            // that all resources will be disposed.
-            using (var scope = serviceProvider.CreateScope())
+
+            using (var serviceProvider = services.BuildServiceProvider(false))
             {
-                var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
-                runner.MigrateUp();
+
+                Console.WriteLine("Running the migration...");
+                // Put the database update into a scope to ensure
+                // that all resources will be disposed.
+                using (var scope = serviceProvider.CreateScope())
+                {
+                    var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+                    runner.MigrateUp();
+
+                    //TODO: Need to destroy the MigrationRunner Processor or whatever is holding connection open
+                }
+            }
+
+            // ---- LOOK FOR OPEN CONNECTIONS
+            
+            Console.WriteLine("Look for open connections...");
+            using (var connection = dbFactory.CreateConnection())
+            {
+                Debug.Assert(connection != null, nameof(connection) + " != null");
+                connection.ConnectionString = adminCSB.ConnectionString;
+                connection.Open();
                 
-                //TODO: Need to destroy the MigrationRunner Processor or whatever is holding connection open
+                using (var command = dbFactory.CreateCommand())
+                {
+                    Debug.Assert(command != null, nameof(command) + " != null");
+                    command.CommandText = $"select DB_NAME(dbid) as DBName, * from sys.sysprocesses where DB_NAME(dbid) = @dbName;";
+                    command.Parameters.Add(new SqlParameter
+                    {
+                        ParameterName = "dbName",
+                        Value = databaseName
+                    });
+                    command.Connection = connection;
+                    Console.WriteLine($"Opening connection to {adminCSB[serverNameKey]}...");
+                    using (var reader = command.ExecuteReader())
+                    {
+                        DataTable schemaTable = reader.GetSchemaTable();
+
+                        foreach (DataRow row in schemaTable.Rows)
+                        {
+                            foreach (DataColumn column in schemaTable.Columns)
+                            {
+                                Console.Write(String.Format("[{0}]='{1}' ",
+                                    column.ColumnName, row[column]));
+                            }
+
+                            Console.WriteLine();
+                            Console.WriteLine();
+                        }
+                    }
+
+                    Console.WriteLine("Done.");
+                }
             }
             
             // -------------------- DO TESTS OF MIGRATIONS
+            // Tests can probably be written in a provider-agnostic fashion using dbFactory object
             
             Console.WriteLine("Goodbye, World!");
             
             // -------------------- DESTROY DATABASE
+            // This bit is all done using the dbFactory object, no provider-specific code
 
             Console.WriteLine("Destroy test database...");
             using (var connection = dbFactory.CreateConnection())
