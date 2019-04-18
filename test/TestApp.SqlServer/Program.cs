@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Threading;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.VersionTableInfo;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -43,6 +44,9 @@ namespace TestApp.SqlServer
             // Create a random database name, avoid spaces, hyphens, underscores
             var databaseName = $"test{Guid.NewGuid():N}";
             Console.WriteLine($"Test databaseName [{databaseName}].");
+            
+            //PrintTableColumnsForSysProcesses(dbFactory, adminCSB, databaseName, serverNameKey);
+            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
 
             // -------------------- CREATE DATABASE
             // This bit is all done using the dbFactory object, no provider-specific code
@@ -65,6 +69,13 @@ namespace TestApp.SqlServer
                     Console.WriteLine("Done creating test database.");
                 }
             }
+            
+            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
+            // seeing frequent "PAGEIOLATCH_SH" waits after creating the database 
+            
+            Thread.Sleep(2500);
+
+            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
 
             // -------------------- RUN MIGRATIONS
             
@@ -94,8 +105,11 @@ namespace TestApp.SqlServer
                     .AddSqlServer() // pick which database type to use for the runner
                     .WithGlobalConnectionString(testDatabaseConnectionString)
                     .ScanIn(typeof(InitialMigration).Assembly).For.Migrations()
+                    .ConfigureGlobalProcessorOptions(x => x.ProviderSwitches.)
                 );
-                
+            
+            
+            
             services
                 // Enable logging to console in the FluentMigrator way
                 .AddLogging(lb => lb.AddFluentMigratorConsole())
@@ -113,50 +127,12 @@ namespace TestApp.SqlServer
                     runner.MigrateUp();
 
                     //TODO: Need to destroy the MigrationRunner Processor or whatever is holding connection open
+                    runner.Processor.Dispose();
                 }
             }
 
-            // ---- LOOK FOR OPEN CONNECTIONS
-            
-            Console.WriteLine("Look for open connections...");
-            using (var connection = dbFactory.CreateConnection())
-            {
-                Debug.Assert(connection != null, nameof(connection) + " != null");
-                connection.ConnectionString = adminCSB.ConnectionString;
-                connection.Open();
-                
-                using (var command = dbFactory.CreateCommand())
-                {
-                    Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText = $"select DB_NAME(dbid) as DBName, * from sys.sysprocesses where DB_NAME(dbid) = @dbName;";
-                    command.Parameters.Add(new SqlParameter
-                    {
-                        ParameterName = "dbName",
-                        Value = databaseName
-                    });
-                    command.Connection = connection;
-                    Console.WriteLine($"Opening connection to {adminCSB[serverNameKey]}...");
-                    using (var reader = command.ExecuteReader())
-                    {
-                        DataTable schemaTable = reader.GetSchemaTable();
+            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
 
-                        foreach (DataRow row in schemaTable.Rows)
-                        {
-                            foreach (DataColumn column in schemaTable.Columns)
-                            {
-                                Console.Write(String.Format("[{0}]='{1}' ",
-                                    column.ColumnName, row[column]));
-                            }
-
-                            Console.WriteLine();
-                            Console.WriteLine();
-                        }
-                    }
-
-                    Console.WriteLine("Done.");
-                }
-            }
-            
             // -------------------- DO TESTS OF MIGRATIONS
             // Tests can probably be written in a provider-agnostic fashion using dbFactory object
             
@@ -180,6 +156,111 @@ namespace TestApp.SqlServer
                     command.Connection = connection;
                     Console.WriteLine($"Opening connection to {adminCSB[serverNameKey]}...");
                     command.ExecuteNonQuery();
+                    Console.WriteLine("Done.");
+                }
+            }
+            
+            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
+        }
+
+        private static void PrintOpenConnectionList(
+            DbProviderFactory dbFactory, 
+            DbConnectionStringBuilder adminCSB,
+            string databaseName, 
+            string serverNameKey
+            )
+        {
+            /* Useful column names in sys.sysprocesses:
+             * - DB_NAME(dbid) - database name
+             * - kpid
+             * - lastwaittype
+             * - cmd
+             * - status
+             * - last_batch
+             */
+            
+            Console.WriteLine("Look for open connections...");
+            using (var connection = dbFactory.CreateConnection())
+            {
+                Debug.Assert(connection != null, nameof(connection) + " != null");
+                connection.ConnectionString = adminCSB.ConnectionString;
+                connection.Open();
+
+                using (var command = dbFactory.CreateCommand())
+                {
+                    Debug.Assert(command != null, nameof(command) + " != null");
+                    command.CommandText =
+                        $"select DB_NAME(dbid) as DBName, * from sys.sysprocesses where DB_NAME(dbid) = @dbName;";
+                    command.Parameters.Add(new SqlParameter
+                    {
+                        ParameterName = "dbName",
+                        Value = databaseName
+                    });
+                    command.Connection = connection;
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                Console.Write($"{reader["DBName"]}\t");
+                                Console.Write($"{reader["last_batch"]}\t");
+                                Console.Write($"{reader["kpid"]}\t");
+                                Console.Write($"{reader["lastwaittype"]}\t");
+                                Console.Write($"{reader["cmd"]}\t");
+                                Console.Write($"{reader["status"]}");
+                                Console.WriteLine();
+                            }
+                        }
+                    }
+                    Console.WriteLine();
+                }
+            }
+        }
+
+        private static void PrintTableColumnsForSysProcesses(
+            DbProviderFactory dbFactory, 
+            DbConnectionStringBuilder adminCSB,
+            string databaseName, 
+            string serverNameKey
+            )
+        {
+            using (var connection = dbFactory.CreateConnection())
+            {
+                Debug.Assert(connection != null, nameof(connection) + " != null");
+                connection.ConnectionString = adminCSB.ConnectionString;
+                connection.Open();
+
+                using (var command = dbFactory.CreateCommand())
+                {
+                    Debug.Assert(command != null, nameof(command) + " != null");
+                    command.CommandText =
+                        $"select DB_NAME(dbid) as DBName, * from sys.sysprocesses where DB_NAME(dbid) = @dbName;";
+                    command.Parameters.Add(new SqlParameter
+                    {
+                        ParameterName = "dbName",
+                        Value = databaseName
+                    });
+                    command.Connection = connection;
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        DataTable schemaTable = reader.GetSchemaTable();
+
+                        foreach (DataRow row in schemaTable.Rows)
+                        {
+                            foreach (DataColumn column in schemaTable.Columns)
+                            {
+                                Console.Write(String.Format("[{0}]='{1}' ",
+                                    column.ColumnName, row[column]));
+                            }
+
+                            Console.WriteLine();
+                            Console.WriteLine();
+                        }
+                    }
+
                     Console.WriteLine("Done.");
                 }
             }
