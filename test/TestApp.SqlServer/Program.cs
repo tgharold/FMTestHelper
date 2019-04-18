@@ -108,8 +108,6 @@ namespace TestApp.SqlServer
                     .ConfigureGlobalProcessorOptions(x => x.ProviderSwitches.)
                 );
             
-            
-            
             services
                 // Enable logging to console in the FluentMigrator way
                 .AddLogging(lb => lb.AddFluentMigratorConsole())
@@ -127,7 +125,6 @@ namespace TestApp.SqlServer
                     runner.MigrateUp();
 
                     //TODO: Need to destroy the MigrationRunner Processor or whatever is holding connection open
-                    runner.Processor.Dispose();
                 }
             }
 
