@@ -105,7 +105,6 @@ namespace TestApp.SqlServer
                     .AddSqlServer() // pick which database type to use for the runner
                     .WithGlobalConnectionString(testDatabaseConnectionString)
                     .ScanIn(typeof(InitialMigration).Assembly).For.Migrations()
-                    .ConfigureGlobalProcessorOptions(x => x.ProviderSwitches.)
                 );
             
             services
