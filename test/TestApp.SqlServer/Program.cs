@@ -71,8 +71,8 @@ namespace TestApp.SqlServer
             }
             
             PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
-            // seeing frequent "PAGEIOLATCH_SH" waits after creating the database 
             
+            // seeing frequent "PAGEIOLATCH_SH" waits after creating the database
             Thread.Sleep(2500);
 
             PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
@@ -81,6 +81,8 @@ namespace TestApp.SqlServer
             
             /* While FluentMigrator can be fed from the dbFactory object,
              * there are bits that are provider-specific like ".AddSqlServer()".
+             *
+             * There might be a way to figure out the database type from the dbFactory?
              */
             
             var testCSB = dbFactory.CreateConnectionStringBuilder();
