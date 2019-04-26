@@ -65,6 +65,7 @@ namespace TestApp.SqlServer
                     command.CommandText = $"DROP DATABASE IF EXISTS [{databaseName}]; CREATE DATABASE [{databaseName}]";
                     command.Connection = connection;
                     Console.WriteLine($"Opening connection to {adminCSB[serverNameKey]}...");
+                    Console.WriteLine($"Execute: ${command.CommandText}");
                     command.ExecuteNonQuery();
                     Console.WriteLine("Done creating test database.");
                 }
@@ -148,11 +149,25 @@ namespace TestApp.SqlServer
                 
                 using (var command = dbFactory.CreateCommand())
                 {
+                    // SQL Server method of putting the database offline (closing all connections)
+                    // It's not possible to parameterize the database names here
+                    Debug.Assert(command != null, nameof(command) + " != null");
+                    command.CommandText = $"ALTER DATABASE [{databaseName}] SET OFFLINE WITH ROLLBACK IMMEDIATE;";
+                    command.Connection = connection;
+                    Console.WriteLine($"Opening connection to {adminCSB[serverNameKey]}...");
+                    Console.WriteLine($"Execute: ${command.CommandText}");
+                    command.ExecuteNonQuery();
+                    Console.WriteLine("Done.");
+                }
+
+                using (var command = dbFactory.CreateCommand())
+                {
                     // It's not possible to parameterize the database names in a DROP
                     Debug.Assert(command != null, nameof(command) + " != null");
                     command.CommandText = $"DROP DATABASE IF EXISTS [{databaseName}];";
                     command.Connection = connection;
                     Console.WriteLine($"Opening connection to {adminCSB[serverNameKey]}...");
+                    Console.WriteLine($"Execute: ${command.CommandText}");
                     command.ExecuteNonQuery();
                     Console.WriteLine("Done.");
                 }
