@@ -12,9 +12,9 @@ using TestApp.SqlServer.Migrations;
 
 namespace TestApp.SqlServer
 {
-    class Program
+    public static class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             Console.WriteLine("Starting");
             
@@ -75,7 +75,6 @@ namespace TestApp.SqlServer
             
             // seeing frequent "PAGEIOLATCH_SH" waits after creating the database
             Thread.Sleep(2500);
-
             PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
 
             // -------------------- RUN MIGRATIONS
@@ -130,6 +129,10 @@ namespace TestApp.SqlServer
                 }
             }
 
+            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
+
+            // Sleep for a bit to see if the connection closes on its own
+            Thread.Sleep(2500);
             PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
 
             // -------------------- DO TESTS OF MIGRATIONS
@@ -191,8 +194,9 @@ namespace TestApp.SqlServer
              * - status
              * - last_batch
              */
-            
-            Console.WriteLine("Look for open connections...");
+
+            Console.WriteLine();
+            Console.WriteLine($"Look for open connections to [{databaseName}]...");
             using (var connection = dbFactory.CreateConnection())
             {
                 Debug.Assert(connection != null, nameof(connection) + " != null");
