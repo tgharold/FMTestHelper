@@ -162,13 +162,15 @@ namespace TestApp.Core
             }
         }        
         
-        public static void PrintConnectionStringBuilderKeysAndValues(DbProviderFactory dbFactory, string adminConnectionString)
+        public static void PrintConnectionStringBuilderKeysAndValues(
+            TestDatabaseConfiguration configuration
+            )
         {
-            var adminCSB = dbFactory.CreateConnectionStringBuilder();
+            var adminCSB = configuration.DbProviderFactory.CreateConnectionStringBuilder();
             Debug.Assert(adminCSB != null, nameof(adminCSB) + " != null");
 
             // Parse the connection string by shoving it into the ConnectionStringBuilder
-            adminCSB.ConnectionString = adminConnectionString;
+            adminCSB.ConnectionString = configuration.AdministratorConnectionString;
             foreach (var k in adminCSB.Keys)
                 Console.WriteLine($"{nameof(adminCSB)}[{k}]='{adminCSB[k.ToString()].ToString()}'");
             Console.WriteLine();

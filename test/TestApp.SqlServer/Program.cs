@@ -16,20 +16,20 @@ namespace TestApp.SqlServer
         public static void Main(string[] args)
         {
             Console.WriteLine("Starting");
-            
-            // The assumption is that all we have is a connection string
-            // And that connection string must have CREATE DATABASE, etc. permissions
-            const string adminConnectionString = "server=localhost,14330;database=master;user=sa;password=paNg2aeshohl;";
-            
-            // Use DbProviderFactory to keep things implementation-agnostic
-            // The registration name can be anything!, using nameof() here for convenience
-            DbProviderFactories.RegisterFactory(nameof(SqlClientFactory), SqlClientFactory.Instance);
-            var dbFactory = DbProviderFactories.GetFactory(nameof(SqlClientFactory));
+
+            var configuration = new TestDatabaseConfiguration(SqlClientFactory.Instance)
+            {
+                AdministratorConnectionString =
+                    "server=localhost,14330;database=master;user=sa;password=paNg2aeshohl;",
+            };
+
+            var dbFactory = configuration.DbProviderFactory;
+            var adminConnectionString = configuration.AdministratorConnectionString;
             
             // Everything after this should depend only on dbFactory (type: DbProviderFactory)
 
             // print what the Connection String looks like from ConnectionStringBuilder
-            Helpers.PrintConnectionStringBuilderKeysAndValues(dbFactory, adminConnectionString);
+            Helpers.PrintConnectionStringBuilderKeysAndValues(configuration);
 
             // Different databases do connection strings slightly different in terms of what the database/server name is
             const string databaseNameKey = "Initial Catalog";
