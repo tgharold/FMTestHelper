@@ -1,6 +1,7 @@
 using System;
+using System.Data;
 using System.Data.SqlClient;
-using System.Globalization;
+using System.Diagnostics;
 using System.Threading;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.VersionTableInfo;
@@ -114,18 +115,104 @@ namespace TestApp.SqlServer
             PrintOpenConnectionList(configuration);
         }
 
-        private static void PrintOpenConnectionList(
+        /// <summary>This is SQLServer specific.</summary>
+        public static void PrintOpenConnectionList(
             TestDatabaseConfiguration configuration
             )
         {
-            Helpers.PrintOpenConnectionList<SqlParameter>(configuration);
-        }
+            /* Useful column names in sys.sysprocesses:
+             * - DB_NAME(dbid) - database name
+             * - kpid
+             * - lastwaittype
+             * - cmd
+             * - status
+             * - last_batch
+             */
 
-        private static void PrintTableColumnsForSysProcesses(
+            Console.WriteLine();
+            Console.WriteLine($"Look for open connections to [{configuration.TestDatabaseName}]...");
+            using (var connection = configuration.DbProviderFactory.CreateConnection())
+            {
+                Debug.Assert(connection != null, nameof(connection) + " != null");
+                connection.ConnectionString = configuration.AdminConnectionString;
+                connection.Open();
+
+                using (var command = configuration.DbProviderFactory.CreateCommand())
+                {
+                    Debug.Assert(command != null, nameof(command) + " != null");
+                    command.CommandText =
+                        "select DB_NAME(dbid) as DBName, * from sys.sysprocesses where DB_NAME(dbid) = @dbName;";
+                    command.Parameters.Add(new SqlParameter
+                    {
+                        ParameterName = "dbName",
+                        Value = configuration.TestDatabaseName
+                    });
+                    command.Connection = connection;
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                Console.Write($"{reader["DBName"]}\t");
+                                Console.Write($"{reader["last_batch"]}\t");
+                                Console.Write($"{reader["kpid"]}\t");
+                                Console.Write($"{reader["lastwaittype"]}\t");
+                                Console.Write($"{reader["cmd"]}\t");
+                                Console.Write($"{reader["status"]}");
+                                Console.WriteLine();
+                            }
+                        }
+                    }
+                    Console.WriteLine();
+                }
+            }
+        }        
+
+        
+        /// <summary>Displays the list of column names for sys.processes in SQL Server</summary>
+        public static void PrintTableColumnsForSysProcesses(
             TestDatabaseConfiguration configuration
             )
         {
-            Helpers.PrintTableColumnsForSysProcesses<SqlParameter>(configuration);
-        }
+            using (var connection = configuration.DbProviderFactory.CreateConnection())
+            {
+                Debug.Assert(connection != null, nameof(connection) + " != null");
+                connection.ConnectionString = configuration.AdminConnectionString;
+                connection.Open();
+
+                using (var command = configuration.DbProviderFactory.CreateCommand())
+                {
+                    Debug.Assert(command != null, nameof(command) + " != null");
+                    command.CommandText =
+                        "select DB_NAME(dbid) as DBName, * from sys.sysprocesses where DB_NAME(dbid) = @dbName;";
+                    command.Parameters.Add(new SqlParameter
+                    {
+                        ParameterName = "dbName",
+                        Value = configuration.TestDatabaseName
+                    });
+                    command.Connection = connection;
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        DataTable schemaTable = reader.GetSchemaTable();
+
+                        foreach (DataRow row in schemaTable.Rows)
+                        {
+                            foreach (DataColumn column in schemaTable.Columns)
+                            {
+                                Console.Write("[{0}]='{1}' ", column.ColumnName, row[column]);
+                            }
+
+                            Console.WriteLine();
+                            Console.WriteLine();
+                        }
+                    }
+
+                    Console.WriteLine("Done.");
+                }
+            }
+        }  
     }
 }
