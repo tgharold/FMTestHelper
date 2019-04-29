@@ -105,12 +105,19 @@ namespace TestApp.PostgreSQL
             // This bit is all done using the dbFactory object, no provider-specific code
 
             // Force closing database connections is a workaround for a bug in FM 3.2.1, but may be needed for broken tests
-            Helpers.CloseAllDatabaseConnections(configuration);
+            CloseAllDatabaseConnections(configuration);
             PrintOpenConnectionList(configuration);
 
             // Destroy the test database
             Helpers.DestroyDatabase(configuration);
             PrintOpenConnectionList(configuration);
+        }
+
+        private static void CloseAllDatabaseConnections(
+            TestDatabaseConfiguration configuration
+            )
+        {
+            //TODO:
         }
 
         private static void PrintOpenConnectionList(
