@@ -7,7 +7,8 @@ using System.Threading;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.VersionTableInfo;
 using Microsoft.Extensions.DependencyInjection;
-using TestApp.SqlServer.Migrations;
+using TestApp.Core;
+using TestApp.Core.Migrations;
 
 namespace TestApp.SqlServer
 {

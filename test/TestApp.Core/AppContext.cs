@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using TestApp.SqlServer.Models;
+using TestApp.Core.Models;
 
-namespace TestApp.SqlServer
+namespace TestApp.Core
 {
     public class AppContext : DbContext
     {

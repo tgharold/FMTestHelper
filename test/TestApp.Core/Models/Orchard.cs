@@ -1,4 +1,4 @@
-namespace TestApp.SqlServer.Models
+namespace TestApp.Core.Models
 {
     public class Orchard
     {

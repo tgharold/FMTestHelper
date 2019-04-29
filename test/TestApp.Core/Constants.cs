@@ -1,4 +1,4 @@
-namespace TestApp.SqlServer
+namespace TestApp.Core
 {
     public static class Constants
     {
