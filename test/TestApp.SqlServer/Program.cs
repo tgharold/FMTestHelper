@@ -107,7 +107,7 @@ namespace TestApp.SqlServer
             // This bit is all done using the dbFactory object, no provider-specific code
 
             // Force closing database connections is a workaround for a bug in FM 3.2.1, but may be needed for broken tests
-            Helpers.CloseAllDatabaseConnections(configuration);
+            CloseAllDatabaseConnections(configuration);
             PrintOpenConnectionList(configuration);
 
             // Destroy the test database
@@ -214,5 +214,31 @@ namespace TestApp.SqlServer
                 }
             }
         }  
+        
+        public static void CloseAllDatabaseConnections(
+            TestDatabaseConfiguration configuration
+        )
+        {
+            Console.WriteLine("Close connections to test database...");
+            using (var connection = configuration.DbProviderFactory.CreateConnection())
+            {
+                Debug.Assert(connection != null, nameof(connection) + " != null");
+                connection.ConnectionString = configuration.AdminConnectionString;
+                connection.Open();
+
+                using (var command = configuration.DbProviderFactory.CreateCommand())
+                {
+                    // SQL Server method of putting the database offline (closing all connections)
+                    // It's not possible to parameterize the database names here
+                    Debug.Assert(command != null, nameof(command) + " != null");
+                    command.CommandText = $"ALTER DATABASE {configuration.TestDatabaseName} SET OFFLINE WITH ROLLBACK IMMEDIATE;";
+                    command.Connection = connection;
+                    Console.WriteLine("Opening connection...");
+                    Console.WriteLine($"Execute: ${command.CommandText}");
+                    command.ExecuteNonQuery();
+                    Console.WriteLine("Done.");
+                }
+            }
+        }
     }
 }
