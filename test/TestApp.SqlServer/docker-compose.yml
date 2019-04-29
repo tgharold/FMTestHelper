@@ -1,0 +1,17 @@
+version: '3.4'
+
+# Use "docker-compose up -d" to start
+
+services:
+  
+  # MSSQL for Linux (only for Development)
+  mssql:
+    image: "mcr.microsoft.com/mssql/server"
+    container_name: fmt-mssql
+    hostname: fmt-mssql
+    environment:
+      SA_PASSWORD: "paNg2aeshohl"
+      ACCEPT_EULA: "Y"
+    restart: unless-stopped
+    ports:
+      - 14330:1433

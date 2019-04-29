@@ -19,7 +19,7 @@ namespace TestApp.SqlServer
             
             // The assumption is that all we have is a connection string
             // And that connection string must have CREATE DATABASE, etc. permissions
-            const string adminConnectionString = "server=localhost,11433;database=master;user=sa;password=Pass123!;";
+            const string adminConnectionString = "server=localhost,14330;database=master;user=sa;password=paNg2aeshohl;";
             
             // Use DbProviderFactory to keep things implementation-agnostic
             // The registration name can be anything!, using nameof() here for convenience
