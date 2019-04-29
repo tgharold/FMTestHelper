@@ -51,29 +51,10 @@ namespace TestApp.SqlServer
             // -------------------- CREATE DATABASE
             // This bit is all done using the dbFactory object, no provider-specific code
 
-            Console.WriteLine("Create test database...");
-            using (var connection = dbFactory.CreateConnection())
-            {
-                Debug.Assert(connection != null, nameof(connection) + " != null");
-                connection.ConnectionString = adminCSB.ConnectionString;
-                connection.Open();
-                
-                using (var command = dbFactory.CreateCommand())
-                {
-                    // It's not possible to parameterize the database names in a DROP/CREATE
-                    Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText = $"DROP DATABASE IF EXISTS [{databaseName}]; CREATE DATABASE [{databaseName}]";
-                    command.Connection = connection;
-                    Console.WriteLine($"Opening connection to {adminCSB[serverNameKey]}...");
-                    Console.WriteLine($"Execute: ${command.CommandText}");
-                    command.ExecuteNonQuery();
-                    Console.WriteLine("Done creating test database.");
-                }
-            }
-            
+            Helpers.CreateTestDatabase(dbFactory, adminCSB.ConnectionString, databaseName);
             PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
-            
-            // seeing frequent "PAGEIOLATCH_SH" waits after creating the database
+            // seeing frequent "PAGEIOLATCH_SH" waits after creating the database, try waiting
+            // this could be just SQL/Docker performance that needs a bit to settle down
             Thread.Sleep(2500);
             PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
 
@@ -143,39 +124,12 @@ namespace TestApp.SqlServer
             // -------------------- DESTROY DATABASE
             // This bit is all done using the dbFactory object, no provider-specific code
 
-            Console.WriteLine("Destroy test database...");
-            using (var connection = dbFactory.CreateConnection())
-            {
-                Debug.Assert(connection != null, nameof(connection) + " != null");
-                connection.ConnectionString = adminCSB.ConnectionString;
-                connection.Open();
-                
-                using (var command = dbFactory.CreateCommand())
-                {
-                    // SQL Server method of putting the database offline (closing all connections)
-                    // It's not possible to parameterize the database names here
-                    Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText = $"ALTER DATABASE [{databaseName}] SET OFFLINE WITH ROLLBACK IMMEDIATE;";
-                    command.Connection = connection;
-                    Console.WriteLine($"Opening connection to {adminCSB[serverNameKey]}...");
-                    Console.WriteLine($"Execute: ${command.CommandText}");
-                    command.ExecuteNonQuery();
-                    Console.WriteLine("Done.");
-                }
+            // Force closing database connections is a workaround for a bug in FM 3.2.1, but may be needed for broken tests
+            Helpers.CloseAllDatabaseConnections(dbFactory, adminCSB.ConnectionString, databaseName);
+            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
 
-                using (var command = dbFactory.CreateCommand())
-                {
-                    // It's not possible to parameterize the database names in a DROP
-                    Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText = $"DROP DATABASE IF EXISTS [{databaseName}];";
-                    command.Connection = connection;
-                    Console.WriteLine($"Opening connection to {adminCSB[serverNameKey]}...");
-                    Console.WriteLine($"Execute: ${command.CommandText}");
-                    command.ExecuteNonQuery();
-                    Console.WriteLine("Done.");
-                }
-            }
-            
+            // Destroy the test database
+            Helpers.DestroyDatabase(dbFactory, adminCSB.ConnectionString, databaseName);
             PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
         }
 

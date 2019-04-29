@@ -7,6 +7,88 @@ namespace TestApp.Core
 {
     public static class Helpers
     {
+        public static void CreateTestDatabase(
+            DbProviderFactory dbFactory, 
+            string connectionString,
+            string databaseName
+            )
+        {
+            Console.WriteLine("Create test database...");
+            using (var connection = dbFactory.CreateConnection())
+            {
+                Debug.Assert(connection != null, nameof(connection) + " != null");
+                connection.ConnectionString = connectionString;
+                connection.Open();
+
+                using (var command = dbFactory.CreateCommand())
+                {
+                    // It's not possible to parameterize the database names in a DROP/CREATE
+                    Debug.Assert(command != null, nameof(command) + " != null");
+                    command.CommandText = $"DROP DATABASE IF EXISTS [{databaseName}]; CREATE DATABASE [{databaseName}]";
+                    command.Connection = connection;
+                    Console.WriteLine($"Opening connection...");
+                    Console.WriteLine($"Execute: ${command.CommandText}");
+                    command.ExecuteNonQuery();
+                    Console.WriteLine("Done creating test database.");
+                }
+            }
+        }        
+        
+        public static void CloseAllDatabaseConnections(
+            DbProviderFactory dbFactory, 
+            string connectionString,
+            string databaseName
+            )
+        {
+            Console.WriteLine("Close connections to test database...");
+            using (var connection = dbFactory.CreateConnection())
+            {
+                Debug.Assert(connection != null, nameof(connection) + " != null");
+                connection.ConnectionString = connectionString;
+                connection.Open();
+
+                using (var command = dbFactory.CreateCommand())
+                {
+                    // SQL Server method of putting the database offline (closing all connections)
+                    // It's not possible to parameterize the database names here
+                    Debug.Assert(command != null, nameof(command) + " != null");
+                    command.CommandText = $"ALTER DATABASE [{databaseName}] SET OFFLINE WITH ROLLBACK IMMEDIATE;";
+                    command.Connection = connection;
+                    Console.WriteLine($"Opening connection...");
+                    Console.WriteLine($"Execute: ${command.CommandText}");
+                    command.ExecuteNonQuery();
+                    Console.WriteLine("Done.");
+                }
+            }
+        }
+        
+        public static void DestroyDatabase(
+            DbProviderFactory dbFactory, 
+            string connectionString,
+            string databaseName
+            )
+        {
+            Console.WriteLine("Destroy test database...");
+            using (var connection = dbFactory.CreateConnection())
+            {
+                Debug.Assert(connection != null, nameof(connection) + " != null");
+                connection.ConnectionString = connectionString;
+                connection.Open();
+
+                using (var command = dbFactory.CreateCommand())
+                {
+                    // It's not possible to parameterize the database names in a DROP
+                    Debug.Assert(command != null, nameof(command) + " != null");
+                    command.CommandText = $"DROP DATABASE IF EXISTS [{databaseName}];";
+                    command.Connection = connection;
+                    Console.WriteLine($"Opening connection...");
+                    Console.WriteLine($"Execute: ${command.CommandText}");
+                    command.ExecuteNonQuery();
+                    Console.WriteLine("Done.");
+                }
+            }
+        }
+        
         public static void PrintOpenConnectionList<TParameter>(
             DbProviderFactory dbFactory, 
             DbConnectionStringBuilder adminCSB,
