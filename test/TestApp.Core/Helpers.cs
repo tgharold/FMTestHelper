@@ -8,23 +8,21 @@ namespace TestApp.Core
     public static class Helpers
     {
         public static void CreateTestDatabase(
-            DbProviderFactory dbFactory, 
-            string connectionString,
-            string databaseName
+            TestDatabaseConfiguration configuration
             )
         {
             Console.WriteLine("Create test database...");
-            using (var connection = dbFactory.CreateConnection())
+            using (var connection = configuration.DbProviderFactory.CreateConnection())
             {
                 Debug.Assert(connection != null, nameof(connection) + " != null");
-                connection.ConnectionString = connectionString;
+                connection.ConnectionString = configuration.AdminConnectionString;
                 connection.Open();
 
-                using (var command = dbFactory.CreateCommand())
+                using (var command = configuration.DbProviderFactory.CreateCommand())
                 {
                     // It's not possible to parameterize the database names in a DROP/CREATE
                     Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText = $"DROP DATABASE IF EXISTS [{databaseName}]; CREATE DATABASE [{databaseName}]";
+                    command.CommandText = $"DROP DATABASE IF EXISTS [{configuration.TestDatabaseName}]; CREATE DATABASE [{configuration.TestDatabaseName}]";
                     command.Connection = connection;
                     Console.WriteLine($"Opening connection...");
                     Console.WriteLine($"Execute: ${command.CommandText}");
@@ -35,24 +33,22 @@ namespace TestApp.Core
         }        
         
         public static void CloseAllDatabaseConnections(
-            DbProviderFactory dbFactory, 
-            string connectionString,
-            string databaseName
+            TestDatabaseConfiguration configuration
             )
         {
             Console.WriteLine("Close connections to test database...");
-            using (var connection = dbFactory.CreateConnection())
+            using (var connection = configuration.DbProviderFactory.CreateConnection())
             {
                 Debug.Assert(connection != null, nameof(connection) + " != null");
-                connection.ConnectionString = connectionString;
+                connection.ConnectionString = configuration.AdminConnectionString;
                 connection.Open();
 
-                using (var command = dbFactory.CreateCommand())
+                using (var command = configuration.DbProviderFactory.CreateCommand())
                 {
                     // SQL Server method of putting the database offline (closing all connections)
                     // It's not possible to parameterize the database names here
                     Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText = $"ALTER DATABASE [{databaseName}] SET OFFLINE WITH ROLLBACK IMMEDIATE;";
+                    command.CommandText = $"ALTER DATABASE [{configuration.TestDatabaseName}] SET OFFLINE WITH ROLLBACK IMMEDIATE;";
                     command.Connection = connection;
                     Console.WriteLine($"Opening connection...");
                     Console.WriteLine($"Execute: ${command.CommandText}");
@@ -63,23 +59,21 @@ namespace TestApp.Core
         }
         
         public static void DestroyDatabase(
-            DbProviderFactory dbFactory, 
-            string connectionString,
-            string databaseName
+            TestDatabaseConfiguration configuration
             )
         {
             Console.WriteLine("Destroy test database...");
-            using (var connection = dbFactory.CreateConnection())
+            using (var connection = configuration.DbProviderFactory.CreateConnection())
             {
                 Debug.Assert(connection != null, nameof(connection) + " != null");
-                connection.ConnectionString = connectionString;
+                connection.ConnectionString = configuration.AdminConnectionString;
                 connection.Open();
 
-                using (var command = dbFactory.CreateCommand())
+                using (var command = configuration.DbProviderFactory.CreateCommand())
                 {
                     // It's not possible to parameterize the database names in a DROP
                     Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText = $"DROP DATABASE IF EXISTS [{databaseName}];";
+                    command.CommandText = $"DROP DATABASE IF EXISTS [{configuration.TestDatabaseName}];";
                     command.Connection = connection;
                     Console.WriteLine($"Opening connection...");
                     Console.WriteLine($"Execute: ${command.CommandText}");
@@ -90,26 +84,20 @@ namespace TestApp.Core
         }
         
         public static string CreateTestDatabaseConnectionString(
-            DbProviderFactory dbFactory, 
-            string adminConnectionString,
-            string databaseNameKey, 
-            string databaseName
+            TestDatabaseConfiguration configuration
             )
         {
-            var testCSB = dbFactory.CreateConnectionStringBuilder();
+            var testCSB = configuration.DbProviderFactory.CreateConnectionStringBuilder();
             Debug.Assert(testCSB != null, nameof(testCSB) + " != null");
 
             // Use the admin connection string, update it with the test database name
-            testCSB.ConnectionString = adminConnectionString;
-            testCSB[databaseNameKey] = databaseName;
+            testCSB.ConnectionString = configuration.AdminConnectionString;
+            testCSB[configuration.DatabaseNameKey] = configuration.TestDatabaseName;
             return testCSB.ConnectionString;
         }
         
         public static void PrintOpenConnectionList<TParameter>(
-            DbProviderFactory dbFactory, 
-            string adminConnectionString,
-            string databaseName, 
-            string serverNameKey
+            TestDatabaseConfiguration configuration
             ) where TParameter : DbParameter, new()
         {
             /* Useful column names in sys.sysprocesses:
@@ -122,14 +110,14 @@ namespace TestApp.Core
              */
 
             Console.WriteLine();
-            Console.WriteLine($"Look for open connections to [{databaseName}]...");
-            using (var connection = dbFactory.CreateConnection())
+            Console.WriteLine($"Look for open connections to [{configuration.TestDatabaseName}]...");
+            using (var connection = configuration.DbProviderFactory.CreateConnection())
             {
                 Debug.Assert(connection != null, nameof(connection) + " != null");
-                connection.ConnectionString = adminConnectionString;
+                connection.ConnectionString = configuration.AdminConnectionString;
                 connection.Open();
 
-                using (var command = dbFactory.CreateCommand())
+                using (var command = configuration.DbProviderFactory.CreateCommand())
                 {
                     Debug.Assert(command != null, nameof(command) + " != null");
                     command.CommandText =
@@ -137,7 +125,7 @@ namespace TestApp.Core
                     command.Parameters.Add(new TParameter
                     {
                         ParameterName = "dbName",
-                        Value = databaseName
+                        Value = configuration.TestDatabaseName
                     });
                     command.Connection = connection;
 
@@ -163,33 +151,31 @@ namespace TestApp.Core
         }        
         
         public static void PrintConnectionStringBuilderKeysAndValues(
-            TestDatabaseConfiguration configuration
+            TestDatabaseConfiguration configuration,
+            string connectionString
             )
         {
-            var adminCSB = configuration.DbProviderFactory.CreateConnectionStringBuilder();
-            Debug.Assert(adminCSB != null, nameof(adminCSB) + " != null");
+            var csb = configuration.DbProviderFactory.CreateConnectionStringBuilder();
+            Debug.Assert(csb != null, nameof(csb) + " != null");
 
             // Parse the connection string by shoving it into the ConnectionStringBuilder
-            adminCSB.ConnectionString = configuration.AdministratorConnectionString;
-            foreach (var k in adminCSB.Keys)
-                Console.WriteLine($"{nameof(adminCSB)}[{k}]='{adminCSB[k.ToString()].ToString()}'");
+            csb.ConnectionString = connectionString;
+            foreach (var k in csb.Keys)
+                Console.WriteLine($"{nameof(csb)}[{k}]='{csb[k.ToString()].ToString()}'");
             Console.WriteLine();
         }
         
         public static void PrintTableColumnsForSysProcesses<TParameter>(
-            DbProviderFactory dbFactory, 
-            string adminConnectionString,
-            string databaseName, 
-            string serverNameKey
+            TestDatabaseConfiguration configuration
             ) where TParameter : DbParameter, new()
         {
-            using (var connection = dbFactory.CreateConnection())
+            using (var connection = configuration.DbProviderFactory.CreateConnection())
             {
                 Debug.Assert(connection != null, nameof(connection) + " != null");
-                connection.ConnectionString = adminConnectionString;
+                connection.ConnectionString = configuration.AdminConnectionString;
                 connection.Open();
 
-                using (var command = dbFactory.CreateCommand())
+                using (var command = configuration.DbProviderFactory.CreateCommand())
                 {
                     Debug.Assert(command != null, nameof(command) + " != null");
                     command.CommandText =
@@ -197,7 +183,7 @@ namespace TestApp.Core
                     command.Parameters.Add(new TParameter
                     {
                         ParameterName = "dbName",
-                        Value = databaseName
+                        Value = configuration.TestDatabaseName
                     });
                     command.Connection = connection;
 

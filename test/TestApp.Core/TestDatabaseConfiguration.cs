@@ -5,20 +5,31 @@ namespace TestApp.Core
 {
     public class TestDatabaseConfiguration
     {
-        public DbProviderFactory DbProviderFactory { get; }
 
         public TestDatabaseConfiguration(
-            DbProviderFactory providerFactory
+            string adminConnectionString,
+            DbProviderFactory providerFactory,
+            string testDatabaseName,
+            string databaseNameKey = "Initial Catalog"
             )
         {
             DbProviderFactory = providerFactory
                 ?? throw new ArgumentNullException(nameof(providerFactory));
+            
+            AdminConnectionString = adminConnectionString;
+            TestDatabaseName = testDatabaseName;
+            DatabaseNameKey = databaseNameKey;
         }
+
+        public DbProviderFactory DbProviderFactory { get; }
 
         /// <summary>Connection string for an account which can connect
         /// and create/destroy databases.</summary>
-        public string AdministratorConnectionString { get; set; }
+        public string AdminConnectionString { get; }
 
+        /// <summary>The key used to find the database name in a
+        /// ConnectionStringBuilder collection.  Some database providers
+        /// use different keys.</summary>
         public string DatabaseNameKey { get; set; }
         public string TestDatabaseName { get; set; }
     }
