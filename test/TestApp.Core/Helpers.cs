@@ -89,9 +89,25 @@ namespace TestApp.Core
             }
         }
         
+        public static string CreateTestDatabaseConnectionString(
+            DbProviderFactory dbFactory, 
+            string adminConnectionString,
+            string databaseNameKey, 
+            string databaseName
+            )
+        {
+            var testCSB = dbFactory.CreateConnectionStringBuilder();
+            Debug.Assert(testCSB != null, nameof(testCSB) + " != null");
+
+            // Use the admin connection string, update it with the test database name
+            testCSB.ConnectionString = adminConnectionString;
+            testCSB[databaseNameKey] = databaseName;
+            return testCSB.ConnectionString;
+        }
+        
         public static void PrintOpenConnectionList<TParameter>(
             DbProviderFactory dbFactory, 
-            DbConnectionStringBuilder adminCSB,
+            string adminConnectionString,
             string databaseName, 
             string serverNameKey
             ) where TParameter : DbParameter, new()
@@ -110,7 +126,7 @@ namespace TestApp.Core
             using (var connection = dbFactory.CreateConnection())
             {
                 Debug.Assert(connection != null, nameof(connection) + " != null");
-                connection.ConnectionString = adminCSB.ConnectionString;
+                connection.ConnectionString = adminConnectionString;
                 connection.Open();
 
                 using (var command = dbFactory.CreateCommand())
@@ -146,9 +162,21 @@ namespace TestApp.Core
             }
         }        
         
+        public static void PrintConnectionStringBuilderKeysAndValues(DbProviderFactory dbFactory, string adminConnectionString)
+        {
+            var adminCSB = dbFactory.CreateConnectionStringBuilder();
+            Debug.Assert(adminCSB != null, nameof(adminCSB) + " != null");
+
+            // Parse the connection string by shoving it into the ConnectionStringBuilder
+            adminCSB.ConnectionString = adminConnectionString;
+            foreach (var k in adminCSB.Keys)
+                Console.WriteLine($"{nameof(adminCSB)}[{k}]='{adminCSB[k.ToString()].ToString()}'");
+            Console.WriteLine();
+        }
+        
         public static void PrintTableColumnsForSysProcesses<TParameter>(
             DbProviderFactory dbFactory, 
-            DbConnectionStringBuilder adminCSB,
+            string adminConnectionString,
             string databaseName, 
             string serverNameKey
             ) where TParameter : DbParameter, new()
@@ -156,7 +184,7 @@ namespace TestApp.Core
             using (var connection = dbFactory.CreateConnection())
             {
                 Debug.Assert(connection != null, nameof(connection) + " != null");
-                connection.ConnectionString = adminCSB.ConnectionString;
+                connection.ConnectionString = adminConnectionString;
                 connection.Open();
 
                 using (var command = dbFactory.CreateCommand())

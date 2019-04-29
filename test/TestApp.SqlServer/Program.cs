@@ -1,5 +1,4 @@
 using System;
-using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -29,14 +28,9 @@ namespace TestApp.SqlServer
             
             // Everything after this should depend only on dbFactory (type: DbProviderFactory)
 
-            var adminCSB = dbFactory.CreateConnectionStringBuilder();
-            Debug.Assert(adminCSB != null, nameof(adminCSB) + " != null");
-            
-            // Parse the connection string by shoving it into the ConnectionStringBuilder
-            adminCSB.ConnectionString = adminConnectionString;
-            foreach(var k in adminCSB.Keys) Console.WriteLine($"{nameof(adminCSB)}[{k}]='{adminCSB[k.ToString()].ToString()}'");
-            Console.WriteLine();
-            
+            // print what the Connection String looks like from ConnectionStringBuilder
+            Helpers.PrintConnectionStringBuilderKeysAndValues(dbFactory, adminConnectionString);
+
             // Different databases do connection strings slightly different in terms of what the database/server name is
             const string databaseNameKey = "Initial Catalog";
             const string serverNameKey = "Data Source";
@@ -46,17 +40,18 @@ namespace TestApp.SqlServer
             Console.WriteLine($"Test databaseName [{databaseName}].");
             
             //PrintTableColumnsForSysProcesses(dbFactory, adminCSB, databaseName, serverNameKey);
-            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
+            PrintOpenConnectionList(dbFactory, adminConnectionString, databaseName, serverNameKey);
 
             // -------------------- CREATE DATABASE
             // This bit is all done using the dbFactory object, no provider-specific code
 
-            Helpers.CreateTestDatabase(dbFactory, adminCSB.ConnectionString, databaseName);
-            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
+            Helpers.CreateTestDatabase(dbFactory, adminConnectionString, databaseName);
+            PrintOpenConnectionList(dbFactory, adminConnectionString, databaseName, serverNameKey);
+
             // seeing frequent "PAGEIOLATCH_SH" waits after creating the database, try waiting
             // this could be just SQL/Docker performance that needs a bit to settle down
             Thread.Sleep(2500);
-            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
+            PrintOpenConnectionList(dbFactory, adminConnectionString, databaseName, serverNameKey);
 
             // -------------------- RUN MIGRATIONS
             
@@ -66,14 +61,13 @@ namespace TestApp.SqlServer
              * There might be a way to figure out the database type from the dbFactory?
              */
             
-            var testCSB = dbFactory.CreateConnectionStringBuilder();
-            Debug.Assert(testCSB != null, nameof(testCSB) + " != null");
-            
-            // Use the admin connection string, update it with the test database name
-            testCSB.ConnectionString = adminConnectionString;
-            testCSB[databaseNameKey] = databaseName;
-            var testDatabaseConnectionString = testCSB.ConnectionString;
-            
+            var testDatabaseConnectionString = Helpers.CreateTestDatabaseConnectionString(
+                dbFactory, 
+                adminConnectionString, 
+                databaseNameKey, 
+                databaseName
+                );
+
             Console.WriteLine("Creating the service provider (DI).");
             var services = new ServiceCollection();
 
@@ -110,11 +104,11 @@ namespace TestApp.SqlServer
                 }
             }
 
-            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
+            PrintOpenConnectionList(dbFactory, adminConnectionString, databaseName, serverNameKey);
 
             // Sleep for a bit to see if the connection closes on its own
             Thread.Sleep(2500);
-            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
+            PrintOpenConnectionList(dbFactory, adminConnectionString, databaseName, serverNameKey);
 
             // -------------------- DO TESTS OF MIGRATIONS
             // Tests can probably be written in a provider-agnostic fashion using dbFactory object
@@ -125,24 +119,24 @@ namespace TestApp.SqlServer
             // This bit is all done using the dbFactory object, no provider-specific code
 
             // Force closing database connections is a workaround for a bug in FM 3.2.1, but may be needed for broken tests
-            Helpers.CloseAllDatabaseConnections(dbFactory, adminCSB.ConnectionString, databaseName);
-            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
+            Helpers.CloseAllDatabaseConnections(dbFactory, adminConnectionString, databaseName);
+            PrintOpenConnectionList(dbFactory, adminConnectionString, databaseName, serverNameKey);
 
             // Destroy the test database
-            Helpers.DestroyDatabase(dbFactory, adminCSB.ConnectionString, databaseName);
-            PrintOpenConnectionList(dbFactory, adminCSB, databaseName, serverNameKey);
+            Helpers.DestroyDatabase(dbFactory, adminConnectionString, databaseName);
+            PrintOpenConnectionList(dbFactory, adminConnectionString, databaseName, serverNameKey);
         }
 
         private static void PrintOpenConnectionList(
             DbProviderFactory dbFactory, 
-            DbConnectionStringBuilder adminCSB,
+            string adminConnectionString,
             string databaseName, 
             string serverNameKey
             )
         {
             Helpers.PrintOpenConnectionList<SqlParameter>(
                 dbFactory,
-                adminCSB,
+                adminConnectionString,
                 databaseName,
                 serverNameKey
                 );
@@ -150,14 +144,14 @@ namespace TestApp.SqlServer
 
         private static void PrintTableColumnsForSysProcesses(
             DbProviderFactory dbFactory, 
-            DbConnectionStringBuilder adminCSB,
+            string adminConnectionString,
             string databaseName, 
             string serverNameKey
             )
         {
             Helpers.PrintTableColumnsForSysProcesses<SqlParameter>(
                 dbFactory,
-                adminCSB,
+                adminConnectionString,
                 databaseName,
                 serverNameKey
             );

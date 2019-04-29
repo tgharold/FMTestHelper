@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
-using System.Diagnostics;
 using Npgsql;
 using TestApp.Core;
 
@@ -16,14 +14,14 @@ namespace TestApp.PostgreSQL
 
         private static void PrintOpenConnectionList(
             DbProviderFactory dbFactory, 
-            DbConnectionStringBuilder adminCSB,
+            string adminConnectionString,
             string databaseName, 
             string serverNameKey
             )
         {
             Helpers.PrintOpenConnectionList<NpgsqlParameter>(
                 dbFactory,
-                adminCSB,
+                adminConnectionString,
                 databaseName,
                 serverNameKey
             );
@@ -31,14 +29,14 @@ namespace TestApp.PostgreSQL
 
         private static void PrintTableColumnsForSysProcesses(
             DbProviderFactory dbFactory, 
-            DbConnectionStringBuilder adminCSB,
+            string adminConnectionString,
             string databaseName, 
             string serverNameKey
             )
         {
             Helpers.PrintTableColumnsForSysProcesses<NpgsqlParameter>(
                 dbFactory,
-                adminCSB,
+                adminConnectionString,
                 databaseName,
                 serverNameKey
             );
