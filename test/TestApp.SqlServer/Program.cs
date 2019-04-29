@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Threading;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.VersionTableInfo;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using TestApp.SqlServer.Migrations;
 
