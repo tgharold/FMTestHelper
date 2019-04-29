@@ -20,7 +20,7 @@ namespace TestApp.Core
                 {
                     // It's not possible to parameterize the database names in a DROP/CREATE
                     Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText = $"DROP DATABASE IF EXISTS [{configuration.TestDatabaseName}]; CREATE DATABASE [{configuration.TestDatabaseName}]";
+                    command.CommandText = $"DROP DATABASE IF EXISTS {configuration.TestDatabaseName}; CREATE DATABASE {configuration.TestDatabaseName}";
                     command.Connection = connection;
                     Console.WriteLine("Opening connection...");
                     Console.WriteLine($"Execute: ${command.CommandText}");
@@ -46,7 +46,7 @@ namespace TestApp.Core
                     // SQL Server method of putting the database offline (closing all connections)
                     // It's not possible to parameterize the database names here
                     Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText = $"ALTER DATABASE [{configuration.TestDatabaseName}] SET OFFLINE WITH ROLLBACK IMMEDIATE;";
+                    command.CommandText = $"ALTER DATABASE {configuration.TestDatabaseName} SET OFFLINE WITH ROLLBACK IMMEDIATE;";
                     command.Connection = connection;
                     Console.WriteLine("Opening connection...");
                     Console.WriteLine($"Execute: ${command.CommandText}");
@@ -71,7 +71,7 @@ namespace TestApp.Core
                 {
                     // It's not possible to parameterize the database names in a DROP
                     Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText = $"DROP DATABASE IF EXISTS [{configuration.TestDatabaseName}];";
+                    command.CommandText = $"DROP DATABASE IF EXISTS {configuration.TestDatabaseName};";
                     command.Connection = connection;
                     Console.WriteLine("Opening connection...");
                     Console.WriteLine($"Execute: ${command.CommandText}");
