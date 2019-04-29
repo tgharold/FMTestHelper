@@ -5,6 +5,7 @@ version: '3.4'
 services:
   
   # MSSQL for Linux (only for Development)
+  # default username is 'sa'
   mssql:
     image: "mcr.microsoft.com/mssql/server"
     container_name: fmt-mssql
