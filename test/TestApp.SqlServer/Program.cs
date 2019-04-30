@@ -217,7 +217,7 @@ namespace TestApp.SqlServer
         
         public static void CloseAllDatabaseConnections(
             TestDatabaseConfiguration configuration
-        )
+            )
         {
             Console.WriteLine("Close connections to test database...");
             using (var connection = configuration.DbProviderFactory.CreateConnection())

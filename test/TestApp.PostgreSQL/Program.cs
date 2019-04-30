@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Diagnostics;
 using System.Threading;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.VersionTableInfo;
@@ -44,7 +45,7 @@ namespace TestApp.PostgreSQL
             // -------------------- RUN MIGRATIONS
             
             /* While FluentMigrator can be fed from the dbFactory object,
-             * there are bits that are provider-specific like ".AddSqlServer()".
+             * there are bits that are provider-specific like ".AddPostgres()".
              *
              * There might be a way to figure out the database type from the dbFactory?
              */
