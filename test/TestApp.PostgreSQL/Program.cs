@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Threading;
 using FluentMigrator.Runner;
@@ -114,11 +114,30 @@ namespace TestApp.PostgreSQL
             PrintOpenConnectionList(configuration);
         }
 
-        private static void CloseAllDatabaseConnections(
+        public static void CloseAllDatabaseConnections(
             TestDatabaseConfiguration configuration
-            )
+        )
         {
-            //TODO:
+            Console.WriteLine("Close connections to test database...");
+            using (var connection = configuration.DbProviderFactory.CreateConnection())
+            {
+                Debug.Assert(connection != null, nameof(connection) + " != null");
+                connection.ConnectionString = configuration.AdminConnectionString;
+                connection.Open();
+
+                using (var command = configuration.DbProviderFactory.CreateCommand())
+                {
+                    // PostgreSQL method of putting the database offline (closing all connections)
+                    // It's not possible to parameterize the database names here
+                    Debug.Assert(command != null, nameof(command) + " != null");
+                    command.CommandText = $"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{configuration.TestDatabaseName}' AND pid <> pg_backend_pid();";
+                    command.Connection = connection;
+                    Console.WriteLine("Opening connection...");
+                    Console.WriteLine($"Execute: ${command.CommandText}");
+                    command.ExecuteNonQuery();
+                    Console.WriteLine("Done.");
+                }
+            }
         }
 
         private static void PrintOpenConnectionList(
