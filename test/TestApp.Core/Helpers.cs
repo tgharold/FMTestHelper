@@ -55,21 +55,6 @@ namespace TestApp.Core
             }
         }
         
-        public static string CreateTestDatabaseConnectionString(
-            TestDatabaseConfiguration configuration
-            )
-        {
-            var testCSB = configuration.DbProviderFactory.CreateConnectionStringBuilder();
-            Debug.Assert(testCSB != null, nameof(testCSB) + " != null");
-
-            // Use the admin connection string, update it with the test database name
-            testCSB.ConnectionString = configuration.AdminConnectionString;
-            testCSB[configuration.DatabaseNameKey] = configuration.TestDatabaseName;
-            return testCSB.ConnectionString;
-        }
-        
-
-        
         public static void PrintConnectionStringBuilderKeysAndValues(
             TestDatabaseConfiguration configuration,
             string connectionString

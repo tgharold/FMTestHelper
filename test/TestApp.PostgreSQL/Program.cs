@@ -50,7 +50,7 @@ namespace TestApp.PostgreSQL
              * There might be a way to figure out the database type from the dbFactory?
              */
             
-            var testDatabaseConnectionString = Helpers.CreateTestDatabaseConnectionString(configuration);
+            var testDatabaseConnectionString = configuration.TestConnectionString;
             Console.WriteLine("Test database connection string:");
             Helpers.PrintConnectionStringBuilderKeysAndValues(configuration, testDatabaseConnectionString);
 
