@@ -11,11 +11,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F2762EE6-D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FMTestHelper.Tests", "test\FMTestHelper.Tests\FMTestHelper.Tests.csproj", "{9FB158DA-58FF-43D2-91D4-079AFFE38AF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp.SqlServer", "test\TestApp.SqlServer\TestApp.SqlServer.csproj", "{CFD60230-3E07-4CD1-B87E-9DFC31F5E155}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp.SqlServer", "testApps\TestApp.SqlServer\TestApp.SqlServer.csproj", "{CFD60230-3E07-4CD1-B87E-9DFC31F5E155}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp.PostgreSQL", "test\TestApp.PostgreSQL\TestApp.PostgreSQL.csproj", "{D0660976-3FEB-46BD-AC9D-A8DEA5257E54}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp.PostgreSQL", "testApps\TestApp.PostgreSQL\TestApp.PostgreSQL.csproj", "{D0660976-3FEB-46BD-AC9D-A8DEA5257E54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp.Core", "test\TestApp.Core\TestApp.Core.csproj", "{D0A7F8D5-6DF1-47F3-BA02-84B81DD1B557}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp.Core", "testApps\TestApp.Core\TestApp.Core.csproj", "{D0A7F8D5-6DF1-47F3-BA02-84B81DD1B557}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
