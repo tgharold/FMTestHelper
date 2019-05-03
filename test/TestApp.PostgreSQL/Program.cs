@@ -144,14 +144,66 @@ namespace TestApp.PostgreSQL
             TestDatabaseConfiguration configuration
             )
         {
-            //TODO:
+            var sql = $@"
+select pid as process_id, 
+usename as username, 
+datname as database_name, 
+client_addr as client_address, 
+application_name,
+backend_start,
+state,
+state_change
+from pg_stat_activity
+where datname = '{configuration.TestDatabaseName}'
+;";
+            
+            Console.WriteLine();
+            Console.WriteLine($"Look for open connections to [{configuration.TestDatabaseName}]...");
+            using (var connection = configuration.DbProviderFactory.CreateConnection())
+            {
+                Debug.Assert(connection != null, nameof(connection) + " != null");
+                connection.ConnectionString = configuration.AdminConnectionString;
+                connection.Open();
+
+                using (var command = configuration.DbProviderFactory.CreateCommand())
+                {
+                    Debug.Assert(command != null, nameof(command) + " != null");
+                    command.CommandText = sql;
+                    command.Parameters.Add(new NpgsqlParameter
+                    {
+                        ParameterName = "dbName",
+                        Value = configuration.TestDatabaseName
+                    });
+                    command.Connection = connection;
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                Console.Write($"{reader["database_name"]}\t");
+                                Console.Write($"{reader["username"]}\t");
+                                Console.Write($"{reader["process_id"]}\t");
+                                Console.Write($"{reader["client_address"]}\t");
+                                Console.Write($"{reader["application_name"]}\t");
+                                Console.Write($"{reader["state"]}\t");
+                                Console.Write($"{reader["state_change"]}\t");
+                                Console.Write($"{reader["backend_start"]}");
+                                Console.WriteLine();
+                            }
+                        }
+                    }
+                    Console.WriteLine();
+                }
+            }
         }
 
         private static void PrintTableColumnsForSysProcesses(
             TestDatabaseConfiguration configuration
             )
         {
-            //TODO:
+            // Not worth implementing for this example
         }        
     }
 }
