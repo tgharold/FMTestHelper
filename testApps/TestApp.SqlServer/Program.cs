@@ -74,7 +74,11 @@ namespace TestApp.SqlServer
             services
                 // Enable logging to console in the FluentMigrator way
                 .AddLogging(lb => lb.AddFluentMigratorConsole())
-                ;
+                .Configure<FluentMigratorLoggerOptions>(cfg =>
+                {
+                    cfg.ShowSql = true;
+                    cfg.ShowElapsedTime = true;
+                });
 
             using (var serviceProvider = services.BuildServiceProvider(false))
             {
