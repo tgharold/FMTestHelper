@@ -117,33 +117,20 @@ namespace TestApp.MariaDB
             PrintOpenConnectionList(configuration);
         }
 
-        public static void CloseAllDatabaseConnections(
+        private static void CloseAllDatabaseConnections(
             TestDatabaseConfiguration configuration
             )
         {
-            //TODO: implement CloseAllDatabaseConnections
-            return;
-
-            Console.WriteLine("Close connections to test database...");
-            using (var connection = configuration.DbProviderFactory.CreateConnection())
-            {
-                Debug.Assert(connection != null, nameof(connection) + " != null");
-                connection.ConnectionString = configuration.AdminConnectionString;
-                connection.Open();
-
-                using (var command = configuration.DbProviderFactory.CreateCommand())
-                {
-                    // PostgreSQL method of putting the database offline (closing all connections)
-                    // It's not possible to parameterize the database names here
-                    Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText = $"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{configuration.TestDatabaseName}' AND pid <> pg_backend_pid();";
-                    command.Connection = connection;
-                    Console.WriteLine("Opening connection...");
-                    Console.WriteLine($"Execute: ${command.CommandText}");
-                    command.ExecuteNonQuery();
-                    Console.WriteLine("Done.");
-                }
-            }
+            /* MySQL/MariaDB does not have a safe way to close all
+             * connections to a particular database.  Unless you want
+             * to create SQL statements on the fly (risky).
+             *
+             * select concat('CALL mysql.rds_kill( ',id,');')
+             * from information_schema.processlist
+             * where DB=@dbName;
+             *
+             * Then process the results, feeding those into execution
+             */
         }
 
         private static void PrintOpenConnectionList(
