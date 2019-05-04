@@ -44,7 +44,7 @@ namespace TestApp.MariaDB
             // -------------------- RUN MIGRATIONS
 
             /* While FluentMigrator can be fed from the dbFactory object,
-             * there are bits that are provider-specific like ".AddPostgres()".
+             * there are bits that are provider-specific like ".AddMySql5()".
              *
              * There might be a way to figure out the database type from the dbFactory?
              */

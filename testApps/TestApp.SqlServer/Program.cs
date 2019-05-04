@@ -29,7 +29,6 @@ namespace TestApp.SqlServer
             Console.WriteLine("Admin connection string:");
             Helpers.PrintConnectionStringBuilderKeysAndValues(configuration, configuration.AdminConnectionString);
 
-            PrintTableColumnsForSysProcesses(configuration);
             PrintOpenConnectionList(configuration);
 
             // -------------------- CREATE DATABASE
@@ -119,8 +118,7 @@ namespace TestApp.SqlServer
             PrintOpenConnectionList(configuration);
         }
 
-        /// <summary>This is SQLServer specific.</summary>
-        public static void PrintOpenConnectionList(
+        private static void PrintOpenConnectionList(
             TestDatabaseConfiguration configuration
             )
         {
@@ -173,53 +171,7 @@ namespace TestApp.SqlServer
                 }
             }
         }        
-
-        
-        /// <summary>Displays the list of column names for sys.processes in SQL Server</summary>
-        public static void PrintTableColumnsForSysProcesses(
-            TestDatabaseConfiguration configuration
-            )
-        {
-            using (var connection = configuration.DbProviderFactory.CreateConnection())
-            {
-                Debug.Assert(connection != null, nameof(connection) + " != null");
-                connection.ConnectionString = configuration.AdminConnectionString;
-                connection.Open();
-
-                using (var command = configuration.DbProviderFactory.CreateCommand())
-                {
-                    Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText =
-                        "select DB_NAME(dbid) as DBName, * from sys.sysprocesses where DB_NAME(dbid) = @dbName;";
-                    command.Parameters.Add(new SqlParameter
-                    {
-                        ParameterName = "dbName",
-                        Value = configuration.TestDatabaseName
-                    });
-                    command.Connection = connection;
-
-                    using (var reader = command.ExecuteReader())
-                    {
-                        DataTable schemaTable = reader.GetSchemaTable();
-
-                        foreach (DataRow row in schemaTable.Rows)
-                        {
-                            foreach (DataColumn column in schemaTable.Columns)
-                            {
-                                Console.Write("[{0}]='{1}' ", column.ColumnName, row[column]);
-                            }
-
-                            Console.WriteLine();
-                            Console.WriteLine();
-                        }
-                    }
-
-                    Console.WriteLine("Done.");
-                }
-            }
-        }  
-        
-        public static void CloseAllDatabaseConnections(
+        private static void CloseAllDatabaseConnections(
             TestDatabaseConfiguration configuration
             )
         {

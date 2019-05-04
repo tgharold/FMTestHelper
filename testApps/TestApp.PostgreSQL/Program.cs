@@ -117,7 +117,7 @@ namespace TestApp.PostgreSQL
             PrintOpenConnectionList(configuration);
         }
 
-        public static void CloseAllDatabaseConnections(
+        private static void CloseAllDatabaseConnections(
             TestDatabaseConfiguration configuration
             )
         {
@@ -138,7 +138,6 @@ AND pid <> pg_backend_pid();
                 using (var command = configuration.DbProviderFactory.CreateCommand())
                 {
                     // PostgreSQL method of putting the database offline (closing all connections)
-                    // It's not possible to parameterize the database names here
                     Debug.Assert(command != null, nameof(command) + " != null");
                     command.CommandText = sql;
                     command.Parameters.Add(new NpgsqlParameter
