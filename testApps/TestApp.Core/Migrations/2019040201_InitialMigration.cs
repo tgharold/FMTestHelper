@@ -11,7 +11,7 @@ namespace TestApp.Core.Migrations
 
             Create.Table("Orchards")
                 .InSchema(Constants.Schema)
-                .WithColumn("OrchardId").AsInt32().NotNullable().Identity()
+                .WithColumn("OrchardId").AsInt32().NotNullable().Identity().PrimaryKey()
                 .WithColumn("Name").AsString().NotNullable()
                 .WithColumn("Description").AsString().NotNullable()
                 ;
