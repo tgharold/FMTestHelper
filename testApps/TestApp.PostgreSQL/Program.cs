@@ -28,7 +28,6 @@ namespace TestApp.PostgreSQL
             Console.WriteLine("Admin connection string:");
             Helpers.PrintConnectionStringBuilderKeysAndValues(configuration, configuration.AdminConnectionString);
 
-            PrintTableColumnsForSysProcesses(configuration);
             PrintOpenConnectionList(configuration);
 
             // -------------------- CREATE DATABASE
@@ -120,8 +119,15 @@ namespace TestApp.PostgreSQL
 
         public static void CloseAllDatabaseConnections(
             TestDatabaseConfiguration configuration
-        )
+            )
         {
+            var sql = @"
+SELECT pg_terminate_backend(pg_stat_activity.pid)
+FROM pg_stat_activity
+WHERE pg_stat_activity.datname = @dbName
+AND pid <> pg_backend_pid();
+;";
+
             Console.WriteLine("Close connections to test database...");
             using (var connection = configuration.DbProviderFactory.CreateConnection())
             {
@@ -134,7 +140,12 @@ namespace TestApp.PostgreSQL
                     // PostgreSQL method of putting the database offline (closing all connections)
                     // It's not possible to parameterize the database names here
                     Debug.Assert(command != null, nameof(command) + " != null");
-                    command.CommandText = $"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{configuration.TestDatabaseName}' AND pid <> pg_backend_pid();";
+                    command.CommandText = sql;
+                    command.Parameters.Add(new NpgsqlParameter
+                    {
+                        ParameterName = "dbName",
+                        Value = configuration.TestDatabaseName
+                    });
                     command.Connection = connection;
                     Console.WriteLine("Opening connection...");
                     Console.WriteLine($"Execute: ${command.CommandText}");
@@ -148,7 +159,7 @@ namespace TestApp.PostgreSQL
             TestDatabaseConfiguration configuration
             )
         {
-            var sql = $@"
+            var sql = @"
 select pid as process_id, 
 usename as username, 
 datname as database_name, 
@@ -158,7 +169,7 @@ backend_start,
 state,
 state_change
 from pg_stat_activity
-where datname = '{configuration.TestDatabaseName}'
+where datname = @dbName
 ;";
             
             Console.WriteLine();
@@ -202,12 +213,5 @@ where datname = '{configuration.TestDatabaseName}'
                 }
             }
         }
-
-        private static void PrintTableColumnsForSysProcesses(
-            TestDatabaseConfiguration configuration
-            )
-        {
-            // Not worth implementing for this example
-        }        
     }
 }
