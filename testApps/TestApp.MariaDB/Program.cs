@@ -28,7 +28,6 @@ namespace TestApp.MariaDB
             Console.WriteLine("Admin connection string:");
             Helpers.PrintConnectionStringBuilderKeysAndValues(configuration, configuration.AdminConnectionString);
 
-            PrintTableColumnsForSysProcesses(configuration);
             PrintOpenConnectionList(configuration);
 
             // -------------------- CREATE DATABASE
@@ -151,21 +150,10 @@ namespace TestApp.MariaDB
             TestDatabaseConfiguration configuration
             )
         {
-            //TODO: Implement this
-
-            return;
-
             var sql = $@"
-select pid as process_id,
-usename as username,
-datname as database_name,
-client_addr as client_address,
-application_name,
-backend_start,
-state,
-state_change
-from pg_stat_activity
-where datname = '{configuration.TestDatabaseName}'
+SELECT *
+FROM INFORMATION_SCHEMA.PROCESSLIST
+WHERE DB = @dbName;
 ;";
 
             Console.WriteLine();
@@ -193,14 +181,13 @@ where datname = '{configuration.TestDatabaseName}'
                         {
                             while (reader.Read())
                             {
-                                Console.Write($"{reader["database_name"]}\t");
-                                Console.Write($"{reader["username"]}\t");
-                                Console.Write($"{reader["process_id"]}\t");
-                                Console.Write($"{reader["client_address"]}\t");
-                                Console.Write($"{reader["application_name"]}\t");
+                                Console.Write($"{reader["db"]}\t");
+                                Console.Write($"{reader["user"]}\t");
+                                Console.Write($"{reader["id"]}\t");
+                                Console.Write($"{reader["command"]}\t");
                                 Console.Write($"{reader["state"]}\t");
-                                Console.Write($"{reader["state_change"]}\t");
-                                Console.Write($"{reader["backend_start"]}");
+                                Console.Write($"{reader["info"]}\t");
+                                Console.Write($"{reader["time"]}");
                                 Console.WriteLine();
                             }
                         }
@@ -208,13 +195,6 @@ where datname = '{configuration.TestDatabaseName}'
                     Console.WriteLine();
                 }
             }
-        }
-
-        private static void PrintTableColumnsForSysProcesses(
-            TestDatabaseConfiguration configuration
-            )
-        {
-            // Not worth implementing for this example
         }
     }
 }
