@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Threading;
 using FluentMigrator.Runner;
@@ -144,6 +144,10 @@ namespace TestApp.MariaDB
             TestDatabaseConfiguration configuration
             )
         {
+            //TODO: Implement this
+
+            return;
+
             var sql = $@"
 select pid as process_id,
 usename as username,
