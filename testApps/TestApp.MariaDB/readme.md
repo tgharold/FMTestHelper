@@ -11,3 +11,9 @@ $ cd test/TestApp.MariaDB
 $ docker compose up -d
 ```
 
+## Notes
+
+- MySQL/MariaDB do not properly support the concept of SQL schemas.  In MySQL 5, "create schema" is just an alias for "create database".
+
+
+
