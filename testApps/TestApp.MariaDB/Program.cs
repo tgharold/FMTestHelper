@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using FluentMigrator.Runner;
@@ -65,7 +65,7 @@ namespace TestApp.MariaDB
 
             services
                 .ConfigureRunner(rb => rb
-                    .AddPostgres() // pick which database type to use for the runner
+                    .AddMySql5() // pick which database type to use for the runner
                     .WithGlobalConnectionString(testDatabaseConnectionString)
                     .ScanIn(typeof(InitialMigration).Assembly).For.Migrations()
                 );
