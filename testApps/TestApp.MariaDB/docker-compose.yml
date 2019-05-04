@@ -1,0 +1,18 @@
+version: '3.4'
+
+# Use "docker-compose up -d" to start
+
+services:
+
+  # https://docs.docker.com/samples/library/mariadb/
+  # default username is 'root'
+  db:
+    image: mariadb
+    container_name: fmt-mariadb
+    hostname: fmt-postgres
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "Woa3abohjoo0doz"
+    ports:
+      - 33060:3306
+
