@@ -6,7 +6,7 @@ using FluentMigrator.Runner.VersionTableInfo;
 using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
 using TestApp.Core;
-using TestApp.Core.Migrations;
+using TestApp.Core.Schemaless.Migrations;
 
 namespace TestApp.MariaDB
 {
@@ -120,8 +120,11 @@ namespace TestApp.MariaDB
 
         public static void CloseAllDatabaseConnections(
             TestDatabaseConfiguration configuration
-        )
+            )
         {
+            //TODO: implement CloseAllDatabaseConnections
+            return;
+
             Console.WriteLine("Close connections to test database...");
             using (var connection = configuration.DbProviderFactory.CreateConnection())
             {

@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\TestApp.Core.Schemaless\TestApp.Core.Schemaless.csproj" />
     <ProjectReference Include="..\TestApp.Core\TestApp.Core.csproj" />
   </ItemGroup>
 
