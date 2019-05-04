@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace TestApp.Core.Migrations
 {
-    [Migration(2019040201)]
+    [Migration(MigrationNumbers.InitialMigration)]
     public class InitialMigration : ForwardOnlyMigration
     {
         public override void Up()

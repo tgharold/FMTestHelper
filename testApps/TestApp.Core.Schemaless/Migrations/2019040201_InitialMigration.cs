@@ -1,8 +1,9 @@
 using FluentMigrator;
+using TestApp.Core.Migrations;
 
 namespace TestApp.Core.Schemaless.Migrations
 {
-    [Migration(2019040201)]
+    [Migration(MigrationNumbers.InitialMigration)]
     public class InitialMigration : ForwardOnlyMigration
     {
         public override void Up()

@@ -1,8 +1,9 @@
 using FluentMigrator;
+using TestApp.Core.Migrations;
 
 namespace TestApp.Core.Schemaless.Migrations
 {
-    [Migration(2019040202)]
+    [Migration(MigrationNumbers.CreateSecondaryOrchards)]
     public class CreateSecondaryOrchards : ForwardOnlyMigration
     {
         public override void Up()
