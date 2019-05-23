@@ -1,10 +1,10 @@
 using System;
-using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Threading;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.VersionTableInfo;
+using FMTestHelper;
 using Microsoft.Extensions.DependencyInjection;
 using TestApp.Core;
 using TestApp.Core.Migrations;
@@ -18,7 +18,7 @@ namespace TestApp.SqlServer
             Console.WriteLine("Starting");
             Console.WriteLine();
 
-            var configuration = new TestDatabaseConfiguration(
+            var configuration = new FMTestHelperConfiguration(
                 "server=localhost,14330;database=master;user=sa;password=paNg2aeshohl;",
                 SqlClientFactory.Instance,
                 $"test{Guid.NewGuid():N}",
@@ -119,7 +119,7 @@ namespace TestApp.SqlServer
         }
 
         private static void PrintOpenConnectionList(
-            TestDatabaseConfiguration configuration
+            FMTestHelperConfiguration configuration
             )
         {
             /* Useful column names in sys.sysprocesses:
@@ -172,7 +172,7 @@ namespace TestApp.SqlServer
             }
         }        
         private static void CloseAllDatabaseConnections(
-            TestDatabaseConfiguration configuration
+            FMTestHelperConfiguration configuration
             )
         {
             Console.WriteLine("Close connections to test database...");

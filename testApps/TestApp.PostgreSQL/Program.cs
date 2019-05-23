@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.VersionTableInfo;
+using FMTestHelper;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using TestApp.Core;
@@ -17,7 +18,7 @@ namespace TestApp.PostgreSQL
             Console.WriteLine("Starting");
             Console.WriteLine();
 
-            var configuration = new TestDatabaseConfiguration(
+            var configuration = new FMTestHelperConfiguration(
                 "host=localhost;port=54320;database=postgres;username=postgres;password=osukos7EnohK;",
                 NpgsqlFactory.Instance,
                 $"test{Guid.NewGuid():N}",
@@ -118,7 +119,7 @@ namespace TestApp.PostgreSQL
         }
 
         private static void CloseAllDatabaseConnections(
-            TestDatabaseConfiguration configuration
+            FMTestHelperConfiguration configuration
             )
         {
             var sql = @"
@@ -155,7 +156,7 @@ AND pid <> pg_backend_pid();
         }
 
         private static void PrintOpenConnectionList(
-            TestDatabaseConfiguration configuration
+            FMTestHelperConfiguration configuration
             )
         {
             var sql = @"

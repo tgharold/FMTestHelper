@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.VersionTableInfo;
+using FMTestHelper;
 using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
 using TestApp.Core;
@@ -17,7 +18,7 @@ namespace TestApp.MariaDB
             Console.WriteLine("Starting");
             Console.WriteLine();
 
-            var configuration = new TestDatabaseConfiguration(
+            var configuration = new FMTestHelperConfiguration(
                 "server=localhost;port=33060;database=mysql;user=root;password=Woa3abohjoo0doz;",
                 MySqlClientFactory.Instance,
                 $"test{Guid.NewGuid():N}",
@@ -118,7 +119,7 @@ namespace TestApp.MariaDB
         }
 
         private static void CloseAllDatabaseConnections(
-            TestDatabaseConfiguration configuration
+            FMTestHelperConfiguration configuration
             )
         {
             /* MySQL/MariaDB does not have a safe way to close all
@@ -134,7 +135,7 @@ namespace TestApp.MariaDB
         }
 
         private static void PrintOpenConnectionList(
-            TestDatabaseConfiguration configuration
+            FMTestHelperConfiguration configuration
             )
         {
             var sql = $@"

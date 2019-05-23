@@ -1,12 +1,13 @@
 using System;
 using System.Diagnostics;
+using FMTestHelper;
 
 namespace TestApp.Core
 {
     public static class Helpers
     {
         public static void CreateTestDatabase(
-            TestDatabaseConfiguration configuration
+            FMTestHelperConfiguration configuration
             )
         {
             Console.WriteLine("Create test database...");
@@ -31,7 +32,7 @@ namespace TestApp.Core
         }        
         
         public static void DestroyDatabase(
-            TestDatabaseConfiguration configuration
+            FMTestHelperConfiguration configuration
             )
         {
             Console.WriteLine("Destroy test database...");
@@ -56,7 +57,7 @@ namespace TestApp.Core
         }
         
         public static void PrintConnectionStringBuilderKeysAndValues(
-            TestDatabaseConfiguration configuration,
+            FMTestHelperConfiguration configuration,
             string connectionString
             )
         {
